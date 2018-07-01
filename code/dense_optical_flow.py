@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
 cap = cv2.VideoCapture(0)
-fps = cap.set(cv2.CAP_PROP_FPS,10)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,32)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,18)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,16)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,12)
 ret, frame1 = cap.read()
 prvs = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 hsv = np.zeros_like(frame1)
@@ -22,7 +21,6 @@ while(1):
     fh = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
     print("Frame size: {0}*{1}".format(fw,fh))
-    print(flow)
     k = cv2.waitKey(30) & 0xff
     if k == 27:
         break
