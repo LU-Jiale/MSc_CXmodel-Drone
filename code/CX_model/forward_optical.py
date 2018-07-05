@@ -7,6 +7,20 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+def draw_flow(img, flow, step=10):
+    h, w = img.shape[:2]
+    y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
+    fx, fy = flow[y,x].T *10
+    fy[:] = 0
+    lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
+    lines = np.int32(lines + 0.5)
+    vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    cv2.polylines(vis, lines, 0, (0, 255, 0))
+    #print(flow.shape)
+    for (x1, y1), (x2, y2) in lines:
+        cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
+    return vis
+
 def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
     """Generate activity for all cells, based on previous activity and current
     motion."""
@@ -51,8 +65,8 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 cap = cv2.VideoCapture('sample1.avi')
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
-fw = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-fh = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fw_quarter = int(fw/4)
 print("Frame size: {0}*{1}".format(fw,fh))
 
@@ -85,15 +99,18 @@ while(1):
     hori_flow = flow[:,:,0]
     
     frame_left = np.roll(hori_flow, -fw_quarter, axis=1)
+    frame_left[:,fw-fw_quarter:fw-1] = 0
     frame_right = np.roll(hori_flow, fw_quarter, axis=1)
-    elapsed_time = time.time() - start_time
-    weight = 1000/(fw*fh)
-    sl = np.sum(frame_left * match_filter)*weight
-    sr = np.sum(frame_right * match_filter)*weight
-
+    frame_right[:,0:fw_quarter-1] = 0
+    #elapsed_time = time.time() - start_time
+    mag = np.abs(hori_flow)
+    mag[mag < 1] = 0
+    weight = mag/(np.sum(mag)+1000)
+    sl = np.sum(frame_left * match_filter*weight)
+    sr = np.sum(frame_right * match_filter*weight)
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
-    speed_left[0] = sl
+    speed_left[0] = (sl + np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
     speed_right[0] = sr
     ax1.clear()
@@ -103,12 +120,13 @@ while(1):
     plt.draw()
 
     # show video
-
-    cv2.imshow('vedio', frame2)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    #leftF = np.roll(next, -fw_quarter, axis=1)
+    #leftFlow = np.roll(flow, -fw_quarter, axis=1)
+    cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
+    if cv2.waitKey(5) & 0xFF == ord('q'):
         break
 
-    
+    print(np.sum(mag),np.average(mag))
     prvs = next
 cap.release()
 cv2.destroyAllWindows()
