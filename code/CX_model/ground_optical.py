@@ -48,26 +48,30 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 
 
 # initialize camera
-cap = cv2.VideoCapture('sample1.avi')
+cap = cv2.VideoCapture('sample2.avi')
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
-fw = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-fh = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fw_quarter = int(fw/4)
 print("Frame size: {0}*{1}".format(fw,fh))
 
 # filter for speed retrieval
-row = np.linspace(0, fw, num=fw, endpoint=False)
-match_filter = np.sin((row/fw -0.5)*np.pi)
-
+left_filter = np.zeros([fh,fw,2])
+right_filter = np.zeros([fh,fw,2])
+left_filter[:,:,0] = np.cos(3*np.pi/4)
+left_filter[:,:,1] = np.sin(3*np.pi/4)
+right_filter[:,:,0] = np.cos(np.pi/4)
+right_filter[:,:,1] = np.sin(np.pi/4)
 # visulize computed speed 
 plt.ion()
 
 fig, (ax1, ax2) = plt.subplots(2, sharey=True)
 ax1.set(title='speed', ylabel='left')
 ax2.set(xlabel='time (s)', ylabel='right')
-speed_left = np.zeros_like(row)
-speed_right = np.zeros_like(row)
+speed_left = np.zeros(300)
+speed_right = np.zeros(300)
+row = np.arange(300)
 plt.show()
 
 ret, frame1 = cap.read()
@@ -82,14 +86,14 @@ while(1):
     ret, frame2 = cap.read()
     next = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-    hori_flow = flow[:,:,0]
-    
-    frame_left = np.roll(hori_flow, -fw_quarter, axis=1)
-    frame_right = np.roll(hori_flow, fw_quarter, axis=1)
+    mag = np.sqrt(np.power(flow[:,:,0],2) + np.power(flow[:,:,1],2))
     elapsed_time = time.time() - start_time
-    weight = 1000/(fw*fh)
-    sl = np.sum(frame_left * match_filter)*weight
-    sr = np.sum(frame_right * match_filter)*weight
+    mag = mag.flatten()
+    count = [i for i in mag if i >= 1]
+    N = len(count)
+    weight = 10000/(fw*fh)
+    sl = np.sum(flow * left_filter)/(N+10000)
+    sr = np.sum(flow * right_filter)/(N+10000)
 
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
@@ -101,9 +105,8 @@ while(1):
     ax1.plot(row, speed_left, 'k-')
     ax2.plot(row, speed_right, 'k-')
     plt.draw()
-
+    print(len(count))
     # show video
-
     cv2.imshow('vedio', frame2)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
