@@ -9,22 +9,24 @@ fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('sample2.avi',fourcc, 20.0, (fw,fh))
+out = cv2.VideoWriter('sample4.avi',fourcc, 20.0, (fw,fh))
 
-while(cap.isOpened()):
-    ret, frame = cap.read()
-    if ret==True:
-        frame = cv2.flip(frame,0)
+if(cap.isOpened()):
+    while(1):
+        ret, frame = cap.read()
+        if ret==True:
+            frame = cv2.flip(frame,0)
 
-        # write the flipped frame
-        out.write(frame)
+            # write the flipped frame
+            out.write(frame)
 
-        cv2.imshow('frame',frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imshow('frame',frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
             break
-    else:
-        break
-
+else:
+    print('No camera!')
 # Release everything if job is finished
 cap.release()
 out.release()
