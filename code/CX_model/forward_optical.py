@@ -5,10 +5,7 @@ import cx_rate
 import cx_basic
 import time
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import plot, ion, show
-#import dronekit
-#import socket
-#import exceptions
+import matplotlib.animation as animation
 
 def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
     """Generate activity for all cells, based on previous activity and current
@@ -51,7 +48,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 
 
 # initialize camera
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture('sample1.avi')
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
 fw = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -64,18 +61,32 @@ row = np.linspace(0, fw, num=fw, endpoint=False)
 match_filter = np.sin((row/fw -0.5)*np.pi)
 
 # visulize computed speed 
+plt.ion()
+
 fig, (ax1, ax2) = plt.subplots(2, sharey=True)
 ax1.set(title='speed', ylabel='left')
 ax2.set(xlabel='time (s)', ylabel='right')
 speed_left = np.zeros_like(row)
 speed_right = np.zeros_like(row)
+plt.show()
 
 ret, frame1 = cap.read()
 prvs = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 hsv = np.zeros_like(frame1)
 hsv[...,1] = 255
 
-
+'''
+    # visulize computed speed 
+    speed_left = np.roll(speed_left, 1)
+    speed_left[0] = sl
+    speed_right = np.roll(speed_right, 1)
+    speed_right[0] = sr
+    ax1.clear()
+    ax2.clear()
+    ax1.plot(row, speed_left, 'k-')
+    ax2.plot(row, speed_right, 'k-')
+    plt.draw()
+'''
 while(1):
     start_time = time.time()
     # Image processing, compute optical flow
@@ -83,24 +94,22 @@ while(1):
     next = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     hori_flow = flow[:,:,0]
-    frame_left = np.roll(hori_flow, -fw_quarter, axis=1)
-    frame_right = np.roll(hori_flow, fw_quarter, axis=1)
-
-    #print(match_filter.shape)
+    #frame_left = np.roll(hori_flow, -fw_quarter, axis=1)
+    #frame_right = np.roll(hori_flow, fw_quarter, axis=1)
     elapsed_time = time.time() - start_time
     weight = 1000/(fw*fh)
-    sl = np.sum(frame_left * match_filter)
-    sr = np.sum(frame_right * match_filter)
-    speed_left = np.roll(speed_left, 1)
-    speed_left[0] = sl
-    speed_right = np.roll(speed_right, 1)
-    speed_right[0] = sr
-    ax1.plot(row, speed_left, 'k-')
-    ax2.plot(row, speed_right, 'k-')
-    plt.draw()
-    plt.show()
+    #sl = np.sum(frame_left * match_filter)
+    #sr = np.sum(frame_right * match_filter)
+
+    # show video
+    frame_left = np.roll(frame2, -fw_quarter, axis=1)
+    frame_right = np.roll(frame2, fw_quarter, axis=1)
+    cv2.imshow('vedio', frame_left)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    
     prvs = next
-    time.sleep(0.5)
 cap.release()
 cv2.destroyAllWindows()
 
