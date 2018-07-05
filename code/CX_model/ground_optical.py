@@ -5,7 +5,20 @@ import cx_rate
 import cx_basic
 import time
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from scipy import signal
+
+def draw_flow(img, flow, step=10):
+    h, w = img.shape[:2]
+    y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
+    fx, fy = flow[y,x].T *10
+    lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
+    lines = np.int32(lines + 0.5)
+    vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    cv2.polylines(vis, lines, 0, (0, 255, 0))
+    #print(flow.shape)
+    for (x1, y1), (x2, y2) in lines:
+        cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
+    return vis
 
 def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
     """Generate activity for all cells, based on previous activity and current
@@ -87,27 +100,33 @@ while(1):
     next = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     mag = np.sqrt(np.power(flow[:,:,0],2) + np.power(flow[:,:,1],2))
-    elapsed_time = time.time() - start_time
-    mag = mag.flatten()
-    count = [i for i in mag if i >= 1]
-    N = len(count)
-    weight = 10000/(fw*fh)
-    sl = np.sum(flow * left_filter)/(N+10000)
-    sr = np.sum(flow * right_filter)/(N+10000)
+    weight = np.zeros_like(flow)
+    weight[:,:,0] = mag/(sum(mag))
+    weight[:,:,1] = mag/(sum(mag))
+    #elapsed_time = time.time() - start_time
+    #mag = mag.flatten()
+    #count = [i for i in mag if i >= 2]
+
+    sl = np.sum((flow * left_filter) * weight)
+    sr = np.sum((flow * right_filter) * weight)
 
     # visulize computed speed 
+    box_filter = np.array([1,1,1,1,1,1,1])/7.0
     speed_left = np.roll(speed_left, 1)
-    speed_left[0] = sl
+    speed_left[0] = (sl + np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
     speed_right[0] = sr
+    
     ax1.clear()
     ax2.clear()
+    #speed_left =signal.convolve(speed_left,box_filter,mode='same')
     ax1.plot(row, speed_left, 'k-')
+    #speed_right =signal.convolve(speed_right,box_filter,mode='same')
     ax2.plot(row, speed_right, 'k-')
     plt.draw()
-    print(len(count))
+    #print(len(mag))
     # show video
-    cv2.imshow('vedio', frame2)
+    cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
