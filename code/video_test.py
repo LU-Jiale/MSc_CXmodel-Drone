@@ -9,7 +9,7 @@ fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('output.avi',fourcc, 20.0, (fw,fh))
+out = cv2.VideoWriter('sample2.avi',fourcc, 20.0, (fw,fh))
 
 while(cap.isOpened()):
     ret, frame = cap.read()
