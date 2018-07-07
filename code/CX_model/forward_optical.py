@@ -96,8 +96,8 @@ while(1):
     start_time = time.time()
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
-    ret, frame2 = cap.read()
-    ret, frame2 = cap.read()
+    #ret, frame2 = cap.read()
+    #ret, frame2 = cap.read()
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
@@ -109,7 +109,7 @@ while(1):
     frame_right[:,0:fw_quarter-1] = 0
     #elapsed_time = time.time() - start_time
     mag = np.abs(hori_flow)
-    mag[mag < 2] = 0
+    mag[mag < 0.5] = 0
     weight = mag/(np.sum(mag)+1000)
     sl = np.sum(frame_left * match_filter*weight)
     sr = np.sum(frame_right * match_filter*weight)
@@ -117,7 +117,7 @@ while(1):
     speed_left = np.roll(speed_left, 1)
     speed_left[0] = (sl + np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
-    speed_right[0] = sr
+    speed_right[0] = (sr + np.sum(speed_right[1:3]))/4
     ax1.clear()
     ax2.clear()
     ax1.plot(row, speed_left, 'k-')
