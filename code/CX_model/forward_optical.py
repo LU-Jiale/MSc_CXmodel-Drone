@@ -4,39 +4,9 @@ import central_complex
 import cx_rate
 import cx_basic
 import time
+import camera_calibration
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
-DIM=(648, 486)
-#K=np.array([[246.35274583696963, -4.826428559211498, 323.93183074769644], [0.0, 243.4716435505204, 243.24494508428336], [0.0, 0.0, 1.0]])
-D=np.array([[-0.08634557881311974], [0.09465735860807668], [0.05719051783268446], [-0.005709516540189177]])
-
-
-K=np.array([[206.26480624709637, 0.0, 323.5], [0.0, 206.26480624709637, 242.5], [0.0, 0.0, 1.0]])
-#D = np.array([[ 0.00001], [ 0.00001], [ 0.00001], [ 0.00001]])
-
-
-def undistort(img, balance=1.0):
-
-    dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
-
-    assert dim1[0]/dim1[1] == DIM[0]/DIM[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
-
-    if not dim2:
-        dim2 = dim1
-
-    if not dim3:
-        dim3 = dim1
-
-    scaled_K = K * dim1[0] / DIM[0]  # The values of K is to scale with image dimension.
-    scaled_K[2][2] = 1.0  # Except that K[2][2] is always 1.0
-
-    # This is how scaled_K, dim2 and balance are used to determine the final K used to un-distort image. OpenCV document failed to make this clear!
-    new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(scaled_K, D, dim2, np.eye(3), balance=balance)
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, dim3, cv2.CV_16SC2)
-    undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    return undistorted_img
-
 
 def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
@@ -94,8 +64,8 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 
 # initialize camera
 cap = cv2.VideoCapture('sample1.avi')
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
+#cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
+#cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fw_quarter = int(fw/4)
@@ -103,7 +73,7 @@ print("Frame size: {0}*{1}".format(fw,fh))
 
 # filter for speed retrieval
 row = np.linspace(0, fw, num=fw, endpoint=False)
-match_filter = np.sin((row/fw -0.5)*np.pi)
+match_filter = np.sin((row/fw -0.5)*0.822*np.pi)
 
 # visulize computed speed 
 plt.ion()
@@ -116,8 +86,8 @@ speed_right = np.zeros_like(row)
 plt.show()
 
 ret, frame1 = cap.read()
-prv = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = undistort(prv)
+temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+prvs = camera_calibration.undistort(temp, 1.0)
 hsv = np.zeros_like(prvs)
 hsv[...,1] = 255
 
@@ -126,8 +96,10 @@ while(1):
     start_time = time.time()
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
+    ret, frame2 = cap.read()
+    ret, frame2 = cap.read()
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = undistort(temp)
+    next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     hori_flow = flow[:,:,0]
     
@@ -137,7 +109,7 @@ while(1):
     frame_right[:,0:fw_quarter-1] = 0
     #elapsed_time = time.time() - start_time
     mag = np.abs(hori_flow)
-    mag[mag < 1] = 0
+    mag[mag < 2] = 0
     weight = mag/(np.sum(mag)+1000)
     sl = np.sum(frame_left * match_filter*weight)
     sr = np.sum(frame_right * match_filter*weight)
