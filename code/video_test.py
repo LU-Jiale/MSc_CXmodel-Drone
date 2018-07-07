@@ -1,10 +1,11 @@
+import sys
 import numpy as np
 import cv2
 import os
 
 DIM=(324, 244)
-K = np.array([[55.33391825477185, 0.0, 157.59360464729062], [0.0, 54.84168328799328, 149.84307839820286], [0.0, 0.0, 1.0]])
-D = np.array([[0.2630630021513974], [0.05010380465347993], [0.030779363074071555], [0.008559784664570531]])
+K = np.array([[180.78947447124168, 0.0, 169.46499593846872], [0.0, 179.24415780126137, 131.1646493611888], [0.0, 0.0, 1.0]])
+D = np.array([[-0.31585338591457013], [0.7261127065557235], [-0.9929549962890939], [0.46877308948619656]])
 
 def undistort(img, balance=1.0, dim2=None, dim3=None):
 
@@ -34,27 +35,27 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-#fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#out = cv2.VideoWriter('sample4.avi',fourcc, 20.0, (fw,fh))
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 picture_num = 0
 if(cap.isOpened()):
     while(1):
         ret, frame = cap.read()
         if ret==True:
             frame = cv2.flip(frame,0)
-	    frame_crop = frame #[30:-1,:,:]
-            gray = cv2.cvtColor(frame_crop, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
-            # out.write(frame)
-            frame_undistorted = undistort(gray, 1.0)
-            #print(frame_undistorted.shape)
-            cv2.imshow('frame',gray)
-
+            out.write(frame)
+            # undistorte image
+            #gray = undistort(gray, 1.0)
+            #gray = gray[50:-50,:]
+            #print(gray.shape)
+#            cv2.imshow('frame', gray)
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
             elif ch == ord('s'):
-                picture_name = "frame" + str(picture_num) + '.png'
+                picture_name = "image" + str(picture_num) + '.jpg'
                 cv2.imwrite(picture_name,gray)
                 picture_num = picture_num + 1
                 print('Save frame: {}'.format(picture_name))
@@ -64,5 +65,5 @@ else:
     print('No camera!')
 # Release everything if job is finished
 cap.release()
-#out.release()
+out.release()
 cv2.destroyAllWindows()
