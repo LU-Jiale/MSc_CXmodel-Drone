@@ -47,8 +47,8 @@ if(cap.isOpened()):
             # write the flipped frame
             # out.write(frame)
             frame_undistorted = undistort(gray, 1.0)
-            print(frame_undistorted.shape)
-            cv2.imshow('frame',frame_undistorted)
+            #print(frame_undistorted.shape)
+            cv2.imshow('frame',gray)
 
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
