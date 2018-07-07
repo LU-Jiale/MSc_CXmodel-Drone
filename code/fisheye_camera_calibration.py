@@ -55,8 +55,8 @@ rms, _, _, _, _ = \
     )
 print("Found " + str(N_OK) + " valid images for calibration")
 print("DIM=" + str(_img_shape[::-1]))
-print("K=np.array(" + str(K.tolist()) + ")")
-print(D*100000000000000)
+print("K = np.array(" + str(K.tolist()) + ")")
+print("D = np.array(" + str(D.tolist()) + ")")
 
 DIM=_img_shape[::-1]
 def undistort(img_path):
