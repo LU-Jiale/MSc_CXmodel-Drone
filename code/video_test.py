@@ -35,22 +35,28 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
+#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+#out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 picture_num = 0
+column_num = 0
 if(cap.isOpened()):
     while(1):
         ret, frame = cap.read()
         if ret==True:
-            frame = cv2.flip(frame,0)
+            #frame = cv2.flip(frame,0)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
-            out.write(frame)
+            #out.write(frame)
             # undistorte image
-            #gray = undistort(gray, 1.0)
-            #gray = gray[50:-50,:]
+            gray = undistort(gray, 1.0)
+            gray = gray[50:-50,:]
+
+            # draw lines on image for calibration angles
+            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
+            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
+            
             #print(gray.shape)
-#            cv2.imshow('frame', gray)
+            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=2, fy=2))
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
@@ -59,11 +65,17 @@ if(cap.isOpened()):
                 cv2.imwrite(picture_name,gray)
                 picture_num = picture_num + 1
                 print('Save frame: {}'.format(picture_name))
+            elif ch == ord('='):
+                column_num = (column_num + 1) % fw
+                print('Now the column is: {}'.format(column_num))
+            elif ch == ord('-'):
+                column_num = (column_num - 1) % fw
+                print('Now the column is: {}'.format(column_num))
         else:
             break
 else:
     print('No camera!')
 # Release everything if job is finished
 cap.release()
-out.release()
+#out.release()
 cv2.destroyAllWindows()
