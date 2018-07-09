@@ -37,7 +37,7 @@ print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
 #fourcc = cv2.VideoWriter_fourcc(*'XVID')
 #out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
-picture_num = 0
+picture_num = 110
 column_num = 0
 if(cap.isOpened()):
     while(1):
