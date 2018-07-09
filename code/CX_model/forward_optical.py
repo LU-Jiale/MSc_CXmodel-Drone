@@ -6,9 +6,16 @@ import cx_basic
 import time
 import sys
 import dronekit
+import os
 import camera_calibration
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
+home = os.environ['HOME']
+if home.split('/')[-1] == 'pi':
+    show_frames = False
+else:
+    show_frames = True
 
 def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
@@ -134,9 +141,12 @@ while(1):
     # show video
     #leftF = np.roll(next, -fw_quarter, axis=1)
     #leftFlow = np.roll(flow, -fw_quarter, axis=1)
-    cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
-    if cv2.waitKey(5) & 0xFF == ord('q'):
-        break
+
+    # show frames if not in rapberry pi
+    if show_frames:
+        cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
+        if cv2.waitKey(5) & 0xFF == ord('q'):
+            break
 
     print(np.sum(mag),np.average(mag))
     prvs = next
