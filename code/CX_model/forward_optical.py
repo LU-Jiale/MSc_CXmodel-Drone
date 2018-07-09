@@ -4,6 +4,8 @@ import central_complex
 import cx_rate
 import cx_basic
 import time
+import sys
+import dronekit
 import camera_calibration
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -43,7 +45,7 @@ def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
     cpu1 = cx.cpu1_output(tb1, cpu4)
     motor = cx.motor_output(cpu1)
     return tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor
-'''
+
 # connect to PX4
 try:
     drone = dronekit.connect('/dev/ttyAMA0', baud = 57600, heartbeat_timeout=15)
@@ -53,7 +55,7 @@ except dronekit.APIException:
 # Other error
 except:
     print 'Some other error!'
-'''
+
 
 # initialize CX model
 cx = cx_rate.CXRate(noise = 0)
@@ -63,7 +65,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 
 
 # initialize camera
-cap = cv2.VideoCapture('sample1.avi')
+cap = cv2.VideoCapture(sys.argv[1])
 #cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 #cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -95,29 +97,34 @@ hsv[...,1] = 255
 while(1):
     start_time = time.time()
     # Image processing, compute optical flow
+    ret, frame2 = cap.read()    
     ret, frame2 = cap.read()
-    #ret, frame2 = cap.read()
-    #ret, frame2 = cap.read()
+    ret, frame2 = cap.read()
+
+    frame2 = cv2.flip(frame2,1)
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     hori_flow = flow[:,:,0]
     
-    frame_left = np.roll(hori_flow, -fw_quarter, axis=1)
-    frame_left[:,fw-fw_quarter:fw-1] = 0
-    frame_right = np.roll(hori_flow, fw_quarter, axis=1)
-    frame_right[:,0:fw_quarter-1] = 0
+    left_frame_shift = 162 - 83
+    frame_left = np.roll(hori_flow, -left_frame_shift, axis=1)
+    frame_left[:,fw-left_frame_shift:fw-1] = 0
+    right_frame_shift = 232 - 162
+    frame_right = np.roll(hori_flow, right_frame_shift, axis=1)
+    frame_right[:,0:right_frame_shift-1] = 0
     #elapsed_time = time.time() - start_time
     mag = np.abs(hori_flow)
-    mag[mag < 0.5] = 0
-    weight = mag/(np.sum(mag)+1000)
+    mag[mag < float(sys.argv[2])] = 0
+    count = [i for i in mag.flatten() if i > 0]
+    weight = mag/(len(count))
     sl = np.sum(frame_left * match_filter*weight)
     sr = np.sum(frame_right * match_filter*weight)
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
-    speed_left[0] = (sl + np.sum(speed_left[1:3]))/4
+    speed_left[0] = (sl) #+ np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
-    speed_right[0] = (sr + np.sum(speed_right[1:3]))/4
+    speed_right[0] = (sr) #+ np.sum(speed_right[1:3]))/4
     ax1.clear()
     ax2.clear()
     ax1.plot(row, speed_left, 'k-')
@@ -133,6 +140,7 @@ while(1):
 
     print(np.sum(mag),np.average(mag))
     prvs = next
+
 cap.release()
 cv2.destroyAllWindows()
 
