@@ -20,7 +20,7 @@ imgpoints = [] # 2d points in image plane.
 
 images = glob.glob('*.jpg')
 
-for fname in images:
+for fname in sorted(images):
     img = cv2.imread(fname)
     if _img_shape == None:
         _img_shape = img.shape[:2]
@@ -32,6 +32,7 @@ for fname in images:
     ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH+cv2.CALIB_CB_FAST_CHECK+cv2.CALIB_CB_NORMALIZE_IMAGE)
     # If found, add object points, image points (after refining them)
     if ret == True:
+        print('Image {} is valid.'.format(fname))
         objpoints.append(objp)
         cv2.cornerSubPix(gray,corners,(3,3),(-1,-1),subpix_criteria)
         imgpoints.append(corners)

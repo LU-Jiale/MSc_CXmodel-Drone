@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import os
 
-DIM=(324, 243)
+DIM=(648, 486)
 K = np.array([[180.78947447124168, 0.0, 169.46499593846872], [0.0, 179.24415780126137, 131.1646493611888], [0.0, 0.0, 1.0]])
 D = np.array([[-0.31585338591457013], [0.7261127065557235], [-0.9929549962890939], [0.46877308948619656]])
 
@@ -57,7 +57,7 @@ if(cap.isOpened()):
 #            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
             
             #print(gray.shape)
-            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=2, fy=2))
+            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=1, fy=1))
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
