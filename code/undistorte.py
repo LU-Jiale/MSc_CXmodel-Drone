@@ -7,13 +7,13 @@ import numpy as np
 #K=np.array([[206.26480624709637, 0.0, 323.5], [0.0, 206.26480624709637, 242.5], [0.0, 0.0, 1.0]])
 #K = np.array([[258.83903327097954, 0.0, 366.9420589448335], [0.0, 258.2501381667232, 266.2952450984071], [0.0, 0.0, 1.0]])
 #D = np.array([[0.1515852898993269], [-0.4089304163756245], [0.41430881723992785], [-0.13253237501826373]])
-DIM=(324, 244)
+DIM=(648, 486)
 #K = np.array([[55.33391825477185, 0.0, 157.59360464729062], [0.0, 54.84168328799328, 149.84307839820286], [0.0, 0.0, 1.0]])
-#D = np.array([[0.2630630021513974], [0.05010380465347993], [0.030779363074071555], [0.008559784664570531]])
+D = np.array([[0.2630630021513974], [0.05010380465347993], [0.030779363074071555], [0.008559784664570531]])
 #K = np.array([[172.93360892538254, 0.0, 150.12114676562246], [0.0, 172.5754934877417, 164.7982875794675], [0.0, 0.0, 1.0]])
 #D = np.array([[0.5522834564101191], [-1.2071731489775397], [1.3898021567744774], [-0.7284428735546499]])
-K = np.array([[103.13240312354819, 0.0, 161.5], [0.0, 103.13240312354819, 121.5], [0.0, 0.0, 1.0]])
-D = np.array([[0.0], [0.0], [0.0], [0.0]])
+K = np.array([[206.26480624709637, 0.0, 323.5], [0.0, 206.26480624709637, 242.5], [0.0, 0.0, 1.0]])
+#D = np.array([[0.0], [0.0], [0.0], [0.0]])
 
 def undistort(img_path, balance=0.0, dim2=None, dim3=None):
 
@@ -34,7 +34,7 @@ def undistort(img_path, balance=0.0, dim2=None, dim3=None):
 
     # This is how scaled_K, dim2 and balance are used to determine the final K used to un-distort image. OpenCV document failed to make this clear!
     new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(scaled_K, D, dim2, np.eye(3), balance=balance)
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), new_K, dim3, cv2.CV_16SC2)
+    map1, map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, dim3, cv2.CV_16SC2)
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
     cv2.imshow("undistorted", undistorted_img)
