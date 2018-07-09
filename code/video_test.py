@@ -31,12 +31,13 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1])
+cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-#fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 picture_num = 10
 column_num = 0
 if(cap.isOpened()):
@@ -47,7 +48,7 @@ if(cap.isOpened()):
 #            frame = cv2.flip(frame,1)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
-            #out.write(frame)
+            out.write(frame)
             # undistorte image
 #            gray = undistort(gray, 1.0)
 #            gray = gray[50:-50,:]
@@ -57,7 +58,7 @@ if(cap.isOpened()):
 #            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
             
             #print(gray.shape)
-            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=0.5, fy=0.5))
+            #cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=0.5, fy=0.5))
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
@@ -78,5 +79,5 @@ else:
     print('No camera!')
 # Release everything if job is finished
 cap.release()
-#out.release()
+out.release()
 cv2.destroyAllWindows()

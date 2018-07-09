@@ -104,8 +104,6 @@ hsv[...,1] = 255
 while(1):
     start_time = time.time()
     # Image processing, compute optical flow
-    ret, frame2 = cap.read()    
-    ret, frame2 = cap.read()
     ret, frame2 = cap.read()
 
     frame2 = cv2.flip(frame2,1)
@@ -122,10 +120,15 @@ while(1):
     frame_right[:,0:right_frame_shift-1] = 0
     #elapsed_time = time.time() - start_time
     mag = np.abs(hori_flow)
-    mag[mag < float(sys.argv[2])] = 0
-    count = [i for i in mag.flatten() if i > 0]
-    weight = mag/(len(count))
+    mag[mag < 0.5] = 0
+    mag[mag > 0.0] = 1.0
+    count = np.sum(mag)
+
+    mag = np.abs(frame_left)
+    weight = mag/(count + 10000)
     sl = np.sum(frame_left * match_filter*weight)
+    mag = np.abs(frame_right)
+    weight = mag/(count + 10000)
     sr = np.sum(frame_right * match_filter*weight)
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
