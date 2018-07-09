@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import os
 
-DIM=(324, 244)
+DIM=(324, 243)
 K = np.array([[180.78947447124168, 0.0, 169.46499593846872], [0.0, 179.24415780126137, 131.1646493611888], [0.0, 0.0, 1.0]])
 D = np.array([[-0.31585338591457013], [0.7261127065557235], [-0.9929549962890939], [0.46877308948619656]])
 
@@ -29,8 +29,8 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
     return undistorted_img
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,324)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,243)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0])
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1])
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
@@ -43,17 +43,18 @@ if(cap.isOpened()):
     while(1):
         ret, frame = cap.read()
         if ret==True:
-            #frame = cv2.flip(frame,0)
+            frame = cv2.flip(frame,0)
+#            frame = cv2.flip(frame,1)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
             #out.write(frame)
             # undistorte image
-            gray = undistort(gray, 1.0)
-            gray = gray[50:-50,:]
+#            gray = undistort(gray, 1.0)
+#            gray = gray[50:-50,:]
 
             # draw lines on image for calibration angles
-            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
-            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
+#            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
+#            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
             
             #print(gray.shape)
             cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=2, fy=2))
