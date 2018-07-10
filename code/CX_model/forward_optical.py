@@ -96,8 +96,8 @@ speed_right = np.zeros(100)
 plt.show()
 
 ret, frame1 = cap.read()
-temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = camera_calibration.undistort(temp, 1.0)
+prvs = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+#prvs = camera_calibration.undistort(temp, 1.0)
 hsv = np.zeros_like(prvs)
 hsv[...,1] = 255
 
@@ -110,8 +110,8 @@ while(1):
     ret, frame2 = cap.read()
 
     frame2 = cv2.flip(frame2,1)
-    temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = camera_calibration.undistort(temp, 1.0)
+    next = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
+    #next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     hori_flow = flow[:,:,0]
     
@@ -153,7 +153,7 @@ while(1):
     #leftFlow = np.roll(flow, -fw_quarter, axis=1)
 
     # show frames if not in rapberry pi
-    if show_frames:
+    if True:
         cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
         if cv2.waitKey(5) & 0xFF == ord('q'):
             break
