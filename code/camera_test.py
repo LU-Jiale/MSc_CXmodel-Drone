@@ -4,8 +4,11 @@ import cv2
 import os
 
 DIM=(1296, 972)
-K=np.array([[997.551893721721, 0.0, 687.7294333541034], [0.0, 978.8712456908783, 531.7489136875715], [0.0, 0.0, 1.0]])
-D=np.array([[-0.9650982224055676], [3.9746324351959803], [-8.272823265948313], [6.303281784060654]])
+#K=np.array([[667.4253620186365, 0.0, 665.3337941912987], [0.0, 666.6926950499752, 512.8714547379312], [0.0, 0.0, 1.0]])
+#D=np.array([[-0.09331815947691117], [0.0074212536566708245], [-0.013219554885738054], [0.012104813850408304]])
+K=np.array([[732.3522413170597, 0.0, 665.8885698012476], [0.0, 729.0931362872735, 525.4529490954391], [0.0, 0.0, 1.0]])
+D=np.array([[-0.09586431729880242], [0.033758571018492424], [-0.16763638449016888], [0.11831395460567679]])
+
 
 def undistort(img, balance=1.0, dim2=None, dim3=None):
 
@@ -29,16 +32,14 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
     return undistorted_img
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1])
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0]/4)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1]/4)
 cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
-# Define the codec and create VideoWriter object
-#fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
-picture_num = 39
+
+picture_num = 10
 column_num = 0
 if(cap.isOpened()):
     while(1):
@@ -50,15 +51,14 @@ if(cap.isOpened()):
             # write the flipped frame
             #out.write(frame)
             # undistorte image
-#            gray = undistort(gray, 1.0)
+            gray = undistort(gray, 1.0)
 #            gray = gray[50:-50,10:-10]
 
             # draw lines on image for calibration angles
-#            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
-#            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
-            
-            #print(gray.shape)
-            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=0.5, fy=0.5))
+            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
+            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
+
+            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=2, fy=2))
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
@@ -79,5 +79,4 @@ else:
     print('No camera!')
 # Release everything if job is finished
 cap.release()
-#out.release()
 cv2.destroyAllWindows()
