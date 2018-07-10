@@ -57,7 +57,7 @@ if(cap.isOpened()):
             #out.write(frame)
             # undistorte image
             gray = undistort(gray, 1.0)
-#            gray = gray[50:-50,10:-10]
+            gray = gray[40:-40,5:-5]
 
             # draw lines on image for calibration angles
             gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
