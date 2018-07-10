@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import os
 
-DIM=(324, 244)
+DIM=(1296, 972)
 K = np.array([[180.78947447124168, 0.0, 169.46499593846872], [0.0, 179.24415780126137, 131.1646493611888], [0.0, 0.0, 1.0]])
 D = np.array([[-0.31585338591457013], [0.7261127065557235], [-0.9929549962890939], [0.46877308948619656]])
 
@@ -36,8 +36,8 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
+#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+#out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 picture_num = 10
 column_num = 0
 if(cap.isOpened()):
@@ -48,7 +48,7 @@ if(cap.isOpened()):
 #            frame = cv2.flip(frame,1)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
-            out.write(frame)
+            #out.write(frame)
             # undistorte image
 #            gray = undistort(gray, 1.0)
 #            gray = gray[50:-50,:]
@@ -58,7 +58,7 @@ if(cap.isOpened()):
 #            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
             
             #print(gray.shape)
-            #cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=0.5, fy=0.5))
+            cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=0.5, fy=0.5))
             ch = 0xFF & cv2.waitKey(1)
             if ch == ord('q'):
                 break
@@ -79,5 +79,5 @@ else:
     print('No camera!')
 # Release everything if job is finished
 cap.release()
-out.release()
+#out.release()
 cv2.destroyAllWindows()
