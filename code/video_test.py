@@ -4,8 +4,8 @@ import cv2
 import os
 
 DIM=(1296, 972)
-K = np.array([[180.78947447124168, 0.0, 169.46499593846872], [0.0, 179.24415780126137, 131.1646493611888], [0.0, 0.0, 1.0]])
-D = np.array([[-0.31585338591457013], [0.7261127065557235], [-0.9929549962890939], [0.46877308948619656]])
+K=np.array([[590.4658323039691, 0.0, 628.0469670222539], [0.0, 588.6041669866412, 513.8845061468388], [0.0, 0.0, 1.0]])
+D=np.array([[-0.03875252151415178], [-0.13435096003563307], [0.1585351688889362], [-0.05067491334790679]])
 
 def undistort(img, balance=1.0, dim2=None, dim3=None):
 
@@ -29,8 +29,8 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
     return undistorted_img
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1])
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,DIM[0]/4)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,DIM[1]/4)
 cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
