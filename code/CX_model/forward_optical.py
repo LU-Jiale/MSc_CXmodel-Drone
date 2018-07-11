@@ -121,14 +121,14 @@ while(1):
     elapsed_time = time.time() - start_time
     # left speed
     mag = np.abs(frame_left)
-    mag[mag < 3.0] = 0
+    mag[mag < 4.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
     sl = np.sum(frame_left * (match_filter[5:-5])*weight)
     # right speed
     mag = np.abs(frame_right)
-    mag[mag < 3.0] = 0
+    mag[mag < 4.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
@@ -136,9 +136,9 @@ while(1):
 
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
-    speed_left[0] = (sl) #+ np.sum(speed_left[1:3]))/4
+    speed_left[0] = (sl+ np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
-    speed_right[0] = (sr) #+ np.sum(speed_right[1:3]))/4
+    speed_right[0] = (sr+ np.sum(speed_right[1:3]))/4
     ax1.clear()
     ax2.clear()
     ax1.plot(row, speed_left, 'r-')
