@@ -219,9 +219,9 @@ def plot_traces(log, include=['TN1', 'TN2', 'CL1', 'TB1', 'CPU4', 'CPU1', 'motor
                                  fontsize=unit_font_size,
                                  handlelength=0,
                                  handletextpad=0)
-                colors = [flow_color_L, flow_color_R]
+                colorss = [flow_color_L, flow_color_R]
                 for i, text in enumerate(l.get_texts()):
-                    text.set_color(colors[i])
+                    text.set_color(colorss[i])
                 for handle in l.legendHandles:
                     handle.set_visible(False)
                 l.draw_frame(False)
@@ -243,7 +243,7 @@ def plot_traces(log, include=['TN1', 'TN2', 'CL1', 'TB1', 'CPU4', 'CPU1', 'motor
 
             if cell_type == 'CPU1':
                 # We add alpha to the outbound part
-                fig.savefig('dummy.jpg')  # This is needed to force draw plot
+                fig.savefig('dummy.pdf')  # This is needed to force draw plot
                 p.get_facecolors().reshape(16, -1, 4)[:, :T_outbound, 3] = 0.1
                 p.set_edgecolor('none')
             else:
