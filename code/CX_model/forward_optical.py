@@ -20,7 +20,7 @@ else:
 def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
-    fx, fy = flow[y,x].T *10
+    fx, fy = flow[y,x].T *3
     fy[:] = 0
     lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
     lines = np.int32(lines + 0.5)
@@ -40,9 +40,8 @@ def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
     tb1 = cx.tb1_output(cl1, tb1)
 
     # Speed
-    flow = cx.get_flow(heading, velocity, filtered_steps)
-    tn1 = cx.tn1_output(flow)
-    tn2 = cx.tn2_output(flow)
+    tn1 = cx.tn1_output(velocity)
+    tn2 = cx.tn2_output(velocity)
 
     # Update memory for distance just travelled
     memory = cx.cpu4_update(memory, tb1, tn1, tn2)
@@ -75,38 +74,36 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 cap = cv2.VideoCapture(sys.argv[1])
 #cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 #cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
-fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-fw_quarter = int(fw/4)
-print("Frame size: {0}*{1}".format(fw,fh))
+#fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+#fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-# filter for speed retrieval
-row = np.linspace(0, fw, num=fw, endpoint=False)
-match_filter = np.sin((row/fw -0.5)*0.822*np.pi)
+ret, frame1 = cap.read()
+#frame1 = cv2.resize(frame1, (0,0), fx=0.25, fy=0.25)
+temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+prvs = camera_calibration.undistort(temp, 1.0)
+(fh, fw) = prvs.shape
+print("Frame size: {0}*{1}".format(fw,fh))
 
 # visulize computed speed 
 plt.ion()
-
 fig, (ax1, ax2) = plt.subplots(2, sharey=True)
 ax1.set(title='speed', ylabel='left')
 ax2.set(xlabel='time (s)', ylabel='right')
-row = np.linspace(0, 100, num=100, endpoint=False)
+x_axis = np.linspace(0, 100, num=100, endpoint=False)
 speed_left = np.zeros(100)
 speed_right = np.zeros(100)
 plt.show()
 
-ret, frame1 = cap.read()
-ret, frame1 = cap.read()
-ret, frame1 = cap.read()
-temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = camera_calibration.undistort(temp, 1.0)
+# filter for speed retrieval
+row = np.linspace(0, fw, num=fw, endpoint=False)
+match_filter = np.sin((row/fw -0.5)*0.822*np.pi)
 
 while(1):
     start_time = time.time()
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     ret, frame2 = cap.read()
-    ret, frame2 = cap.read()
+    #frame2 = cv2.resize(frame2, (0,0), fx=0.25, fy=0.25)
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
@@ -121,41 +118,47 @@ while(1):
     elapsed_time = time.time() - start_time
     # left speed
     mag = np.abs(frame_left)
-    mag[mag < 4.0] = 0
+    mag[mag < 1.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
-    sl = np.sum(frame_left * (match_filter[5:-5])*weight)
+    sl = np.sum(frame_left * (match_filter)*weight)
     # right speed
     mag = np.abs(frame_right)
-    mag[mag < 4.0] = 0
+    mag[mag < 1.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
-    sr = np.sum(frame_right * (match_filter[5:-5])*weight)
+    sr = np.sum(frame_right * (match_filter)*weight)
 
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
-    speed_left[0] = (sl+ np.sum(speed_left[1:3]))/4
+    speed_left[0] = (sl) # + np.sum(speed_left[1:3]))/4
     speed_right = np.roll(speed_right, 1)
-    speed_right[0] = (sr+ np.sum(speed_right[1:3]))/4
+    speed_right[0] = (sr) # + np.sum(speed_right[1:3]))/4
     ax1.clear()
     ax2.clear()
-    ax1.plot(row, speed_left, 'r-')
-    ax1.plot(row, speed_right, 'k-')
+    ax1.plot(x_axis, speed_left, 'r-')
+    ax1.plot(x_axis, speed_right, 'k-')
     plt.draw()
 
     # show video
-    #leftF = np.roll(next, -fw_quarter, axis=1)
-    #leftFlow = np.roll(flow, -fw_quarter, axis=1)
+    #leftF = np.roll(next, -fw/4, axis=1)
+    #leftFlow = np.roll(flow, -fw/4, axis=1)
+
+    # updare cx_neurons
+    velocity = np.array([sl, sr])
+    tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
+            heading=0, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
 
     # show frames if not in rapberry pi
     if True:
         cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
         if cv2.waitKey(5) & 0xFF == ord('q'):
             break
+    angle, distance = cx.decode_cpu4(cpu4)
+    print((angle/np.pi) * 180, distance)
 
-    print(count,np.max(np.abs(frame_left)))
     prvs = next
 
 cap.release()
