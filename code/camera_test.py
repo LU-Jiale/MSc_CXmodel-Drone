@@ -51,11 +51,7 @@ if(cap.isOpened()):
         ret, frame = cap.read()
         if ret==True:
             frame = cv2.flip(frame,0)
-<<<<<<< HEAD:code/video_test.py
-            frame = cv2.flip(frame,1)
-=======
-#            frame = cv2.flip(frame,1)
->>>>>>> 22882e50fe07073b9f76227ea23466acff1918d3:code/camera_test.py
+
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # write the flipped frame
             #out.write(frame)
