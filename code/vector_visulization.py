@@ -13,8 +13,8 @@ def draw_flow(img, flow, step=20):
     vis = img
     cv2.polylines(vis, lines, 0, (0, 255, 0))
     #print(flow.shape)
-    #for (x1, y1), (x2, y2) in lines:
-        #cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
+    for (x1, y1), (x2, y2) in lines:
+        cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
     return vis
 
 vertical_views = (np.arange(244, dtype=float)-122.0)/244.0*(100.0/180.0*np.pi)
@@ -29,10 +29,25 @@ for i in range(244):
 a = np.array([0, 1, 0])
 matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
 
-print(matched_filter.shape)
-
+rho = LA.norm(matched_filter, axis=2)
+phi = np.arctan2(matched_filter[:,:,0], matched_filter[:,:,1])
+phi_l = (phi + 2*np.pi + np.pi/4)%(2*np.pi)
+phi_r = (phi + 2*np.pi - np.pi/4)%(2*np.pi)
+left_filter = np.zeros([244,324,2])
+left_filter[:,:,0]=rho * np.cos(phi_l)
+left_filter[:,:,1]=rho * np.sin(phi_l)
+right_filter = np.zeros([244,324,2])
+right_filter[:,:,0]=rho * np.cos(phi_r)
+right_filter[:,:,1]=rho * np.sin(phi_r)
 img = np.ones([244,324,3])
 vector_map = draw_flow(img, matched_filter)
-cv2.imshow('vector_map', vector_map)
+cv2.imshow('origin', vector_map)
+img = np.ones([244,324,3])
+vector_map = draw_flow(img, left_filter)
+cv2.imshow('left', vector_map)
+img = np.ones([244,324,3])
+vector_map = draw_flow(img, -right_filter)
+cv2.imshow('right', vector_map)
 cv2.waitKey()
+
 cv2.destroyAllWindows()

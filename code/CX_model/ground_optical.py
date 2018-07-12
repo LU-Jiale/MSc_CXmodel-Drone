@@ -10,6 +10,7 @@ import os
 import camera_calibration
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from numpy import linalg as LA
 
 home = os.environ['HOME']
 if home.split('/')[-1] == 'pi':
@@ -21,7 +22,6 @@ def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
     fx, fy = flow[y,x].T *3
-    fy[:] = 0
     lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
     lines = np.int32(lines + 0.5)
     vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -78,7 +78,7 @@ cap = cv2.VideoCapture(sys.argv[1])
 #fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 ret, frame1 = cap.read()
-#frame1 = cv2.resize(frame1, (0,0), fx=0.25, fy=0.25)
+frame1 = cv2.resize(frame1, (0,0), fx=0.5, fy=0.5)
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = camera_calibration.undistort(temp, 1.0)
 (fh, fw) = prvs.shape
@@ -95,41 +95,47 @@ speed_right = np.zeros(100)
 plt.show()
 
 # filter for speed retrieval
-row = np.linspace(0, fw, num=fw, endpoint=False)
-match_filter = np.sin((row/fw -0.5)*0.822*np.pi)
+vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(100.0/180.0*np.pi)
+horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(100.0/180.0*np.pi)
+
+D = np.zeros([fh,fw,3])
+for i in range(fh):
+    for j in range(fw):
+        D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
+        D[i,j] /= LA.norm(D[i,j])
+
+a = np.array([0, 1, 0])
+matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
+
+rho = LA.norm(matched_filter, axis=2)
+phi = np.arctan2(matched_filter[:,:,0], matched_filter[:,:,1])
+phi_l = phi + np.pi/4
+phi_r = phi - np.pi/4
+left_filter = np.zeros([fh,fw,2])
+left_filter[:,:,0]=rho * np.cos(phi_l)
+left_filter[:,:,1]=rho * np.sin(phi_l)
+right_filter = np.zeros([fh,fw,2])
+right_filter[:,:,0]=rho * np.cos(phi_r)
+right_filter[:,:,1]=rho * np.sin(phi_r)
 
 while(1):
     start_time = time.time()
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
-    ret, frame2 = cap.read()
-    #frame2 = cv2.resize(frame2, (0,0), fx=0.25, fy=0.25)
+    frame2 = cv2.resize(frame2, (0,0), fx=0.5, fy=0.5)
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = camera_calibration.undistort(temp, 1.0)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-    hori_flow = flow[:,:,0]
     
-    left_frame_shift = fw/4
-    frame_left = np.roll(hori_flow, -left_frame_shift, axis=1)
-    frame_left[:,fw-left_frame_shift:fw-1] = 0
-    right_frame_shift = fw/4
-    frame_right = np.roll(hori_flow, right_frame_shift, axis=1)
-    frame_right[:,0:right_frame_shift-1] = 0
     elapsed_time = time.time() - start_time
-    # left speed
-    mag = np.abs(frame_left)
-    mag[mag < 1.0] = 0
-    mag[mag > 0.0] = 1.0
-    count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
-    sl = np.sum(frame_left * (match_filter)*weight)
-    # right speed
-    mag = np.abs(frame_right)
-    mag[mag < 1.0] = 0
-    mag[mag > 0.0] = 1.0
-    count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
-    sr = np.sum(frame_right * (match_filter)*weight)
+    # speed
+    #mag = np.abs(frame_left)
+    #mag[mag < 1.0] = 0
+    #mag[mag > 0.0] = 1.0
+    #count = np.sum(mag)
+    weight = 1/(elapsed_time*(1000000))
+    sl = np.sum(flow * (left_filter)*weight)
+    sr = np.sum(flow * (-right_filter)*weight)
 
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
