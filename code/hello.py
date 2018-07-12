@@ -24,8 +24,8 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
         print " Waiting for arming..."
         time.sleep(1)
 
-    print "Taking off!"
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    #print "Taking off!"
+    #vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
@@ -40,26 +40,26 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
 # Try to connect to PX4
 try:
     vehicle = dronekit.connect('/dev/ttyAMA0', baud=921600, wait_ready=True)
-
 # Bad TCP connection
 except socket.error:
     print 'No server exists!'
-
 # Bad TTY connection
 except exceptions.OSError as e:
     print 'No serial exists!'
-
 # API Error
 except dronekit.APIException:
     print 'Timeout!'
-
 # Other error
 except:
     print 'Some other error!'
 
 if vehicle:
-    #arm_and_takeoff(vehicle, 20)
-    while(1):
-        print(vehicle.heading)
-        time.sleep(2)
+    print('Mode:', vehicle.mode.name)
+#    arm_and_takeoff(vehicle, 20)
+    vehicle.armed   = True
+    for i in range(10):
+        print('Heading:', vehicle.heading)
+        print('Velocity:', vehicle.velocity)
+        time.sleep(1)
+        vehicle.armed   = False
 vehicle.close()
