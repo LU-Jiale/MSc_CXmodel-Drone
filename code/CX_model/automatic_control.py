@@ -35,7 +35,7 @@ def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
 drone_connected = False
 try:
     drone_connected = True
-    drone = dronekit.connect('/dev/ttyAMA0', baud = 57600, heartbeat_timeout=15)
+    drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
 # API Error
 except dronekit.APIException:
     drone_connected = False
@@ -97,22 +97,23 @@ while(1):
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
-    sl = np.sum(frame_left * (match_filter[5:-5])*weight)
+    sl = np.sum(frame_left * (match_filter)*weight)
     # right speed
     mag = np.abs(frame_right)
     mag[mag < 1.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     weight = mag/(elapsed_time*(count + 10000))
-    sr = np.sum(frame_right * (match_filter[5:-5])*weight)
+    sr = np.sum(frame_right * (match_filter)*weight)
 
     # update CX model
-    print(sl,sr)
     if drone_connected:
         tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
-                heading=vehicle.heading, velocity=np.array([sl, sr]), tb1=tb1, 
+                heading=drone.heading, velocity=np.array([sl, sr]), tb1=tb1, 
                 memory=memory, cx=cx)
-        print(motor)
+        angle, distance = cx.decode_cpu4(cpu4)
+        angle_degree = angle/np.pi * 180
+        print "Angle:%.2f  Distance:%.2f Motor:%.2f" % (angle_degree, distance, motor)
     # show video
     #leftF = np.roll(next, -fw_quarter, axis=1)
     #leftFlow = np.roll(flow, -fw_quarter, axis=1)

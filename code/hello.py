@@ -39,7 +39,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
 
 # Try to connect to PX4
 try:
-    vehicle = dronekit.connect('/dev/serial0', baud=921600, wait_ready=True)
+    vehicle = dronekit.connect('/dev/ttyAMA0', baud=921600, wait_ready=True)
 
 # Bad TCP connection
 except socket.error:
@@ -62,3 +62,4 @@ if vehicle:
     while(1):
         print(vehicle.heading)
         time.sleep(2)
+vehicle.close()
