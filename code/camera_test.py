@@ -34,7 +34,9 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
     new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(scaled_K, D, dim2, np.eye(3), balance=balance)
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, dim3, cv2.CV_16SC2)
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    return undistorted_img
+    
+    crop_size = int(dim1[0] / 10)
+    return undistorted_img[crop_size:-crop_size,:]
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,fw)
@@ -57,8 +59,6 @@ if(cap.isOpened()):
             #out.write(frame)
             # undistorte image
             gray = undistort(gray, 1.0)
-            gray = gray[40:-40,5:-5]
-
             # draw lines on image for calibration angles
             fh,fw = gray.shape
             gray = cv2.line(gray,(column_num,1),(column_num,fh),(255,255,0),1)
