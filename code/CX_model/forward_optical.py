@@ -71,13 +71,16 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 
 
 # initialize camera
+frame_num = 0 
 cap = cv2.VideoCapture(sys.argv[1])
 #cap.set(cv2.CAP_PROP_FRAME_WIDTH,200)
 #cap.set(cv2.CAP_PROP_FRAME_HEIGHT,130)
 #fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 #fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-ret, frame1 = cap.read()
+for i in range(200):              
+    ret, frame1 = cap.read()      # Skip frames
+    frame_num += 1
 #frame1 = cv2.resize(frame1, (0,0), fx=0.25, fy=0.25)
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = camera_calibration.undistort(temp, 1.0)
@@ -98,11 +101,11 @@ plt.show()
 row = np.linspace(0, fw, num=fw, endpoint=False)
 match_filter = np.sin((row/fw -0.5)*0.822*np.pi)
 
-while(1):
-    start_time = time.time()
+start_time = time.time()
+while(1):    
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
-    ret, frame2 = cap.read()
+    frame_num += 1
     #frame2 = cv2.resize(frame2, (0,0), fx=0.25, fy=0.25)
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = camera_calibration.undistort(temp, 1.0)
@@ -117,18 +120,18 @@ while(1):
     frame_right[:,0:right_frame_shift-1] = 0
     elapsed_time = time.time() - start_time
     # left speed
-    mag = np.abs(frame_left)
-    mag[mag < 1.0] = 0
+    mag = np.abs(frame_left/match_filter)
+    mag[mag < 0.5] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
+    weight = mag/((0.034+elapsed_time)*count*100+1)
     sl = np.sum(frame_left * (match_filter)*weight)
     # right speed
-    mag = np.abs(frame_right)
-    mag[mag < 1.0] = 0
+    mag = np.abs(frame_right/match_filter)
+    mag[mag < 0.5] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
+    weight = mag/((0.034+elapsed_time)*count*100+1)
     sr = np.sum(frame_right * (match_filter)*weight)
 
     # visulize computed speed 
@@ -142,24 +145,20 @@ while(1):
     ax1.plot(x_axis, speed_right, 'k-')
     plt.draw()
 
-    # show video
-    #leftF = np.roll(next, -fw/4, axis=1)
-    #leftFlow = np.roll(flow, -fw/4, axis=1)
-
     # updare cx_neurons
     velocity = np.array([sl, sr])
     tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
             heading=0, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
-
-    # show frames if not in rapberry pi
-    if True:
-        cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            break
     angle, distance = cx.decode_cpu4(cpu4)
-    print((angle/np.pi) * 180, distance)
+    #print((angle/np.pi) * 180, distance)
 
+    # show frames
+    print('Frame number:', frame_num)
+    cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
+    if cv2.waitKey(5) & 0xFF == ord('q'):
+        break
     prvs = next
+    start_time = time.time()
 
 cap.release()
 cv2.destroyAllWindows()
