@@ -4,12 +4,10 @@ import cv2
 import os
 
 DIM=(1296, 972)
-#K=np.array([[732.3522413170597, 0.0, 665.8885698012476], [0.0, 729.0931362872735, 525.4529490954391], [0.0, 0.0, 1.0]])
-#D=np.array([[-0.09586431729880242], [0.033758571018492424], [-0.16763638449016888], [0.11831395460567679]])
-#K=np.array([[660.6098041503778, 0.0, 665.6546670454397], [0.0, 660.3604369721945, 511.57917049614656], [0.0, 0.0, 1.0]])
-#D=np.array([[-0.08973017001349061], [0.014517673009189712], [-0.02365561646089509], [0.015926363249533296]])
-K=np.array([[1440.318444287085, 0.0, 676.9511026584912], [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
-D=np.array([[-0.8909302058344544], [3.1817023042732813], [-12.598093051063067], [17.641313727690882]])
+#K=np.array([[1440.318444287085, 0.0, 676.9511026584912], [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
+#D=np.array([[-0.8909302058344544], [3.1817023042732813], [-12.598093051063067], [17.641313727690882]])
+K=np.array([[649.7237194130138, 0.0, 570.0013929289199], [0.0, 627.6183259974277, 532.3632845985546], [0.0, 0.0, 1.0]])
+D=np.array([[-0.1428222048947462], [0.22455805794512237], [-0.2695633377157125], [0.1381009248014135]])
 
 fw = 1296/4
 fh = 972/4
@@ -36,7 +34,7 @@ def undistort(img, balance=1.0, dim2=None, dim3=None):
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
     
     crop_size = int(dim1[0] / 10)
-    return undistorted_img[crop_size:-crop_size,:]
+    return undistorted_img[70:200,18:-1]
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,fw)
@@ -60,9 +58,13 @@ if(cap.isOpened()):
             # undistorte image
             gray = undistort(gray, 1.0)
             # draw lines on image for calibration angles
+#            gray = gray[64*4:220*4, :]
             fh,fw = gray.shape
-            gray = cv2.line(gray,(column_num,1),(column_num,fh),(255,255,0),1)
-            gray = cv2.line(gray,(int(fw/2),1),(int(fw/2),fh),(255,255,0),1)
+            gray = cv2.line(gray,(1, column_num),(fw, column_num),(255,255,0),1)
+            gray = cv2.line(gray,(1, int(fh/2)),(fw, int(fh/2)),(255,255,0),1)
+
+            gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)
+            gray = cv2.line(gray,(int(fw/2), 1),(int(fw/2), fh),(255,255,0),1)
 
             cv2.imshow('frame', cv2.resize(gray, (0, 0), fx=2, fy=2))
             ch = 0xFF & cv2.waitKey(1)
