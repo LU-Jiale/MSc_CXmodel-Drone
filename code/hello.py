@@ -55,11 +55,12 @@ except:
 
 if vehicle:
     print('Mode:', vehicle.mode.name)
-    arm_and_takeoff(vehicle, 20)
-#    vehicle.armed   = True
-    for i in range(10):
+#    arm_and_takeoff(vehicle, 20)
+    for i in range(20):
         print('Heading:', vehicle.heading)
         print('Velocity:', vehicle.velocity)
-        time.sleep(0.5)
+        time.sleep(2)
+        vehicle.armed   = True
+        time.sleep(2)
         vehicle.armed   = False
 vehicle.close()
