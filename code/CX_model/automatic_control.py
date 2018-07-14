@@ -1,128 +1,77 @@
 import numpy as np
+import sys, os, time
+import logging, datetime
 import cv2
+import cx_rate, cx_basic
 import central_complex
-import cx_rate
-import cx_basic
-import time
-import sys
 import dronekit
-import os
-import camera_calibration
+from graphics import draw_flow, frame_preprocess
+from optical_flow import undistort, get_filter, get_speed
+from central_complex import update_cells
 
-def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
-    """Generate activity for all cells, based on previous activity and current
-    motion."""
-    # Compass
-    tl2 = cx.tl2_output(heading)
-    cl1 = cx.cl1_output(tl2)
-    tb1 = cx.tb1_output(cl1, tb1)
-
-    # Speed
-    flow = cx.get_flow(heading, velocity, filtered_steps)
-    tn1 = cx.tn1_output(flow)
-    tn2 = cx.tn2_output(flow)
-
-    # Update memory for distance just travelled
-    memory = cx.cpu4_update(memory, tb1, tn1, tn2)
-    cpu4 = cx.cpu4_output(memory)
-
-    # Steer based on memory and direction
-    cpu1 = cx.cpu1_output(tb1, cpu4)
-    motor = cx.motor_output(cpu1)
-    return tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor
-
-# connect to PX4
-drone_connected = False
-try:
-    drone_connected = True
-    drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
-# API Error
-except dronekit.APIException:
-    drone_connected = False
-    print 'Timeout!'
-# Other error
-except:
-    drone_connected = False
-    print 'Some other error!'
-
+# initialize logger
+fname = str(datetime.datetime.now()).replace(':', '-') + '.log'
+logging.basicConfig(filename=fname,level=logging.DEBUG)
 
 # initialize CX model
 cx = cx_rate.CXRate(noise = 0)
 tb1 = np.zeros(central_complex.N_TB1)
 memory = 0.5 * np.ones(central_complex.N_CPU4)
 
-# initialize camera
+# initialize camera and optical flow
+frame_num = 0 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,1296/4)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,972/4)
-fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-fw_quarter = int(fw/4)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,324)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,243)
+cap.set(cv2.CAP_PROP_FPS, 30)
+ret, frame1 = cap.read()
+temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+prvs = undistort(temp, 1.0)
+prvs = frame_preprocess(prvs, scale=1.0, crop_size = [0.0, 0.0])
+(fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
+left_filter, right_filter = get_filter(fh, fw)
 
-# filter for speed retrieval
-row = np.linspace(0, fw, num=fw, endpoint=False)
-match_filter = np.sin((row/fw -0.5)*np.pi)
+# connect to PX4
+try:
+    drone = dronekit.connect('/dev/ttyAMA0', baud = 57600, heartbeat_timeout=15)
+except dronekit.APIException:
+    logging.critical('Timeout! Fail to connect PX4')
+    raise Exception('Timeout! Fail to connct PX4')
+except:    
+    logging.critical('Some other error!')
+    raise Exception('Fail to connct PX4')
 
-# initalize frames
-ret = False
-while(ret==False):
-    ret, frame = cap.read()
-frame = cv2.flip(frame,0)
-frame = cv2.flip(frame,1)
-temp = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-prvs = camera_calibration.undistort(temp, 1.0)
 
-while(1):
-    start_time = time.time()
+start_time = time.time()
+for i in range(1500):    
     # Image processing, compute optical flow
-    ret, frame = cap.read()
-    frame = cv2.flip(frame,0)
-    frame = cv2.flip(frame,1)
-    temp = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    next = camera_calibration.undistort(temp, 1.0)
-    flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-    hori_flow = flow[:,:,0]
+    ret, frame2 = cap.read()
+    frame_num += 1    
+    temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
+    next = undistort(temp, 1.0)
+    next = frame_preprocess(next, scale=1.0, crop_size = [0.0, 0.0])
+    flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
-    left_frame_shift = fw/4
-    frame_left = np.roll(hori_flow, -left_frame_shift, axis=1)
-    frame_left[:,fw-left_frame_shift:fw-1] = 0
-    right_frame_shift = fw/4
-    frame_right = np.roll(hori_flow, right_frame_shift, axis=1)
-    frame_right[:,0:right_frame_shift-1] = 0
+    # speed
     elapsed_time = time.time() - start_time
-    # left speed
-    mag = np.abs(frame_left)
-    mag[mag < 1.0] = 0
-    mag[mag > 0.0] = 1.0
-    count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
-    sl = np.sum(frame_left * (match_filter)*weight)
-    # right speed
-    mag = np.abs(frame_right)
-    mag[mag < 1.0] = 0
-    mag[mag > 0.0] = 1.0
-    count = np.sum(mag)
-    weight = mag/(elapsed_time*(count + 10000))
-    sr = np.sum(frame_right * (match_filter)*weight)
+    sl, sr = get_speed(flow, left_filter, right_filter, elapsed_time)
+    
 
-    # update CX model
-    if drone_connected:
-        tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
-                heading=drone.heading, velocity=np.array([sl, sr]), tb1=tb1, 
-                memory=memory, cx=cx)
-        angle, distance = cx.decode_cpu4(cpu4)
-        angle_degree = angle/np.pi * 180
-        print "Angle:%.2f  Distance:%.2f Motor:%.2f" % (angle_degree, distance, motor)
-    # show video
-    #leftF = np.roll(next, -fw_quarter, axis=1)
-    #leftFlow = np.roll(flow, -fw_quarter, axis=1)
-    #cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=2, fy=2))
-    #if cv2.waitKey(5) & 0xFF == ord('q'):
-    #    break
+    # updare cx_neurons
+    velocity = np.array([sl, sr])
+    tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
+            heading=0, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
+    
+    # logging
+    logging.info('sl:{} sr:{} heading:{}, velocity:{}'.format(sl,sr,drone.heading,drone.velocity))
 
     prvs = next
-
+    start_time = time.time()
+angle, distance = cx.decode_cpu4(cpu4)
+print((angle/np.pi) * 180, distance)
+logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
+drone.close()
 cap.release()
 cv2.destroyAllWindows()
 

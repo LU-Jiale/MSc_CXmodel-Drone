@@ -11,6 +11,26 @@ N_CPU1A = 14
 N_CPU1B = 2
 N_CPU1 = N_CPU1A + N_CPU1B
 
+def update_cells(heading, velocity, tb1, memory, cx, filtered_steps=0.0):
+    """Generate activity for all cells, based on previous activity and current
+    motion."""
+    # Compass
+    tl2 = cx.tl2_output(heading)
+    cl1 = cx.cl1_output(tl2)
+    tb1 = cx.tb1_output(cl1, tb1)
+
+    # Speed
+    tn1 = cx.tn1_output(velocity)
+    tn2 = cx.tn2_output(velocity)
+
+    # Update memory for distance just travelled
+    memory = cx.cpu4_update(memory, tb1, tn1, tn2)
+    cpu4 = cx.cpu4_output(memory)
+
+    # Steer based on memory and direction
+    cpu1 = cx.cpu1_output(tb1, cpu4)
+    motor = cx.motor_output(cpu1)
+    return tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor
 
 def decode_position(cpu4_reshaped, cpu4_mem_gain):
     """Decode position from sinusoid in to polar coordinates.

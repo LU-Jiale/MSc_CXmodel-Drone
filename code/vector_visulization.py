@@ -26,35 +26,23 @@ def rotate_vector(vector, angle):
     vector[0] = rho * np.sin(phi_l)     # y axis
     
 
-fh = 300
+fh = 200
 fw = 300
-'''
-D = np.ones([fh,fw,3], dtype = float)
-for i in range(fh):
-    for j in range(fw):
-        vector = np.array([i-fh/2, j-fw/2])
-        rho = LA.norm(vector)
-        phi = np.arctan2(vector[0], vector[1])
-        phi_l = (phi -0*np.pi/4)
-        x = rho * np.cos(phi_l)
-        y = rho * np.sin(phi_l)
-        x_angle = x/fw*(90.0/180.0*np.pi)
-        y_angle = y/fh*(160.0/180.0*np.pi)
-        D[i,j]=np.array([np.tan(y_angle), np.tan(x_angle),-1])
-        #D[i,j]=np.array([y,x,-1])
-        D[i,j] /= LA.norm(D[i,j])
-'''
+
 vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(80.0/180.0*np.pi)
 horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
 
-D = np.zeros([fh,fw,3])
-for i in range(fh):
-    for j in range(fw):
-        D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
-        D[i,j] /= (LA.norm(D[i,j,0:2]) + 0.0000001)
-        D[i,j] /= LA.norm(D[i,j])
+D = np.ones([fh,fw,3])*-1
+D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
+D[:,:,1] = np.tan(horizontal_views)
+#mag_temp = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
+#normlizer = np.array([mag_temp, mag_temp, mag_temp])
+#D /= normlizer
+mag_temp = LA.norm(D, axis = 2) + 0.0000001
+normlizer = mag_temp.reshape(fh,fw,1)
+D /= normlizer
 
-a = np.array([-1, -1, 0])
+a = np.array([-1, 0, 0])
 matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
 # show vector map
 img = np.ones([fh,fw,3])
