@@ -12,12 +12,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from numpy import linalg as LA
 
-home = os.environ['HOME']
-if home.split('/')[-1] == 'pi':
-    show_frames = False
-else:
-    show_frames = True
-
 def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
@@ -111,8 +105,8 @@ speed_right = np.zeros(100)
 plt.show()
 
 # filter for speed retrieval
-vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(100.0/180.0*np.pi)
-horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(100.0/180.0*np.pi)
+vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
+horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(80.0/180.0*np.pi)
 
 D = np.zeros([fh,fw,3])
 for i in range(fh):
@@ -120,19 +114,11 @@ for i in range(fh):
         D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
         D[i,j] /= LA.norm(D[i,j])
 
-a = np.array([0, 1, 0])
-matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
+a_l = a = np.array([-1/np.sqrt(2), 1/np.sqrt(2), 0])
+a_r = a = np.array([-1/np.sqrt(2), -1/np.sqrt(2), 0])
 
-rho = LA.norm(matched_filter, axis=2)
-phi = np.arctan2(matched_filter[:,:,0], matched_filter[:,:,1])
-phi_l = phi + np.pi/4
-phi_r = phi - np.pi/4
-left_filter = np.zeros([fh,fw,2])
-left_filter[:,:,0]=rho * np.cos(phi_l)
-left_filter[:,:,1]=rho * np.sin(phi_l)
-right_filter = np.zeros([fh,fw,2])
-right_filter[:,:,0]=rho * np.cos(phi_r)
-right_filter[:,:,1]=rho * np.sin(phi_r)
+left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2]
+right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2]
 
 start_time = time.time()
 while(1):    
@@ -145,8 +131,8 @@ while(1):
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
     # speed
-    mag = LA.norm(flow/matched_filter, axis=2)
-    mag[mag < 1.0] = 0
+    mag = LA.norm(flow/left_filter, axis=2)
+    mag[mag < 2.0] = 0
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     elapsed_time = time.time() - start_time
@@ -155,7 +141,7 @@ while(1):
     weight[:,:,0] = weight_e
     weight[:,:,1] = weight_e
     sl = np.sum(flow * (left_filter)*weight)
-    sr = np.sum(flow * (-right_filter)*weight)
+    sr = np.sum(flow * (right_filter)*weight)
     
     # visulize computed speed 
     speed_left = np.roll(speed_left, 1)
@@ -165,7 +151,7 @@ while(1):
     ax1.clear()
     ax2.clear()
     ax1.plot(x_axis, speed_left, 'r-')
-    ax1.plot(x_axis, speed_right, 'k-')
+    ax1.plot(x_axis, speed_right, 'b-')
     plt.draw()
 
     # updare cx_neurons

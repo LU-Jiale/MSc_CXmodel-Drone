@@ -14,7 +14,7 @@ out = cv2.VideoWriter(sys.argv[2],fourcc, 20.0, (fw,fh))
 frame_num = 0
 
 # skip frames
-for i in range(1900):
+for i in range(2300):
     ret, frame = cap.read()
     frame_num += 1
 
@@ -25,7 +25,7 @@ if(cap.isOpened()):
             frame_num += 1
             print('Frame number:', frame_num)
             cv2.imshow('vedio', frame)
-            if cv2.waitKey(50) & 0xFF == ord('q') or frame_num==19000:
+            if cv2.waitKey(50) & 0xFF == ord('q') or frame_num==2600:
                 break
             # write the flipped frame
             out.write(frame)

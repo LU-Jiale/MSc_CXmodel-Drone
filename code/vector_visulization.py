@@ -7,7 +7,7 @@ from numpy import linalg as LA
 def draw_flow(img, flow, step=20):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
-    fx, fy = flow[y,x].T *18
+    fx, fy = flow[y,x].T *10
     lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
     lines = np.int32(lines + 0.5)
     vis = img
@@ -17,37 +17,62 @@ def draw_flow(img, flow, step=20):
         cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
     return vis
 
-vertical_views = (np.arange(244, dtype=float)-122.0)/244.0*(100.0/180.0*np.pi)
-horizontal_views = (np.arange(324, dtype=float)-162.0)/324.0*(100.0/180.0*np.pi)
+def rotate_vector(vector, angle):
+    vector = np.array([i-fh/2, j-fw/2])
+    rho = LA.norm(vector)
+    phi = np.arctan2(vector[0], vector[1])
+    phi_l = (phi - np.pi/4)
+    vector[1] = rho * np.cos(phi_l)     # x axis
+    vector[0] = rho * np.sin(phi_l)     # y axis
+    
 
-D = np.zeros([244,324,3])
-for i in range(244):
-    for j in range(324):
+fh = 300
+fw = 300
+'''
+D = np.ones([fh,fw,3], dtype = float)
+for i in range(fh):
+    for j in range(fw):
+        vector = np.array([i-fh/2, j-fw/2])
+        rho = LA.norm(vector)
+        phi = np.arctan2(vector[0], vector[1])
+        phi_l = (phi -0*np.pi/4)
+        x = rho * np.cos(phi_l)
+        y = rho * np.sin(phi_l)
+        x_angle = x/fw*(90.0/180.0*np.pi)
+        y_angle = y/fh*(160.0/180.0*np.pi)
+        D[i,j]=np.array([np.tan(y_angle), np.tan(x_angle),-1])
+        #D[i,j]=np.array([y,x,-1])
+        D[i,j] /= LA.norm(D[i,j])
+'''
+vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(80.0/180.0*np.pi)
+horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
+
+D = np.zeros([fh,fw,3])
+for i in range(fh):
+    for j in range(fw):
+        D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
+        D[i,j] /= (LA.norm(D[i,j,0:2]) + 0.0000001)
+        D[i,j] /= LA.norm(D[i,j])
+
+a = np.array([-1, -1, 0])
+matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
+# show vector map
+img = np.ones([fh,fw,3])
+vector_map = draw_flow(img, matched_filter)
+cv2.imshow('filter1', vector_map)
+
+D = np.zeros([fh,fw,3])
+for i in range(fh):
+    for j in range(fw):
         D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
         D[i,j] /= LA.norm(D[i,j])
 
-a = np.array([0, 1, 0])
+a = np.array([-1, 0, 0])
 matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
-
-rho = LA.norm(matched_filter, axis=2)
-phi = np.arctan2(matched_filter[:,:,0], matched_filter[:,:,1])
-phi_l = (phi + 2*np.pi + np.pi/4)%(2*np.pi)
-phi_r = (phi + 2*np.pi - np.pi/4)%(2*np.pi)
-left_filter = np.zeros([244,324,2])
-left_filter[:,:,0]=rho * np.cos(phi_l)
-left_filter[:,:,1]=rho * np.sin(phi_l)
-right_filter = np.zeros([244,324,2])
-right_filter[:,:,0]=rho * np.cos(phi_r)
-right_filter[:,:,1]=rho * np.sin(phi_r)
-img = np.ones([244,324,3])
+# show vector map
+img = np.ones([fh,fw,3])
 vector_map = draw_flow(img, matched_filter)
-cv2.imshow('origin', vector_map)
-img = np.ones([244,324,3])
-vector_map = draw_flow(img, left_filter)
-cv2.imshow('left', vector_map)
-img = np.ones([244,324,3])
-vector_map = draw_flow(img, -right_filter)
-cv2.imshow('right', vector_map)
-cv2.waitKey()
+cv2.imshow('filter2', vector_map)
 
+cv2.waitKey()
 cv2.destroyAllWindows()
