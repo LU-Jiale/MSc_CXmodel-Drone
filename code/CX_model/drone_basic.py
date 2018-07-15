@@ -65,7 +65,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
             return 'Interrupt from controller, Mission cancelled.'
     return "Take off finished"
 
-def arm():
+def arm(vehicle):
     """
     Arms vehicle 
     """
@@ -102,7 +102,7 @@ def arm():
             print "Arm motors failed! Mission cancelled."
             return "Arm motors failed! Mission cancelled."
     
-    return "Armed successfully
+    return "Armed successfully"
 
     
 
