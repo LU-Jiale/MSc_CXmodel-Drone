@@ -2,10 +2,13 @@ import dronekit
 import socket
 import exceptions
 import time
+from dronekit import VehicleMode
 
 def arm_and_takeoff(vehicle, aTargetAltitude):
     """
     Arms vehicle and fly to aTargetAltitude.
+    ('Available modes: ', ['ALTCTL', 'STABILIZED', 'OFFBOARD', 'LAND', 'POSCTL', 'RTL', 
+    'MANUAL', 'MISSION', 'RATTITUDE', 'RTGS', 'LOITER', 'ACRO', 'FOLLOWME'])
     """
 
     print "Basic pre-arm checks"
@@ -15,7 +18,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
         time.sleep(1)
 
     print "Arming motors"
-    # Copter should arm in GUIDED mode
+    # Copter should arm in GUIDVehicleMode("GUIDED")ED mode
     vehicle.mode    = VehicleMode("GUIDED")
     vehicle.armed   = True
 
@@ -55,12 +58,17 @@ except:
 
 if vehicle:
     print('Mode:', vehicle.mode.name)
+    vehicle.mode = VehicleMode("ALTCTL")
 #    arm_and_takeoff(vehicle, 20)
     for i in range(20):
-        print('Heading:', vehicle.heading)
-        print('Velocity:', vehicle.velocity)
-        time.sleep(2)
-        vehicle.armed   = True
-        time.sleep(2)
-        vehicle.armed   = False
+        if vehicle.mode == VehicleMode("ALTCTL"):
+            print('Heading:', vehicle.heading)
+            print('Velocity:', vehicle.velocity)
+            time.sleep(0.5)
+            vehicle.armed   = True
+            time.sleep(2)
+            vehicle.armed   = False
+        else:
+            print 'Interrupt from controller, mission is stopped.'
+            break;
 vehicle.close()
