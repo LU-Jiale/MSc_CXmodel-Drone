@@ -8,6 +8,7 @@ import dronekit
 from graphics import draw_flow, frame_preprocess
 from optical_flow import undistort, get_filter, get_speed, FRAME_DIM
 from central_complex import update_cells
+from drone_basic import arm, arm_and_takeoff
 
 # initialize logger
 fname = 'log/' + str(datetime.datetime.now()).replace(':', '-') + '.log'
@@ -24,9 +25,9 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,FRAME_DIM[0])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,FRAME_DIM[1])
 cap.set(cv2.CAP_PROP_FPS, 30)
-#if ~cap.isOpened():
-#    logging.info('Camera not connected!')
-#    raise Exception('Camera not connected!')
+if not cap.isOpened():
+    logging.info('Camera not connected!')
+    raise Exception('Camera not connected!')
 ret, frame1 = cap.read()
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = undistort(temp)
@@ -34,7 +35,7 @@ prvs = undistort(temp)
 print("Frame size: {0}*{1}".format(fw,fh))
 left_filter, right_filter = get_filter(fh, fw)
 
-# connect to PX4
+# connect to PX4 and arm
 try:
     drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
 except dronekit.APIException:
@@ -43,7 +44,8 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-
+state = arm(drone)
+logging.info(state)
 
 start_time = time.time()
 for i in range(100):
