@@ -27,9 +27,9 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
             return "Initialisation failed! Mission cancelled."
 
     # Arming motors after checking the mode is set up properly:
-    vehicle.mode = VehicleMode("POSCTL")
+    vehicle.mode = VehicleMode("OFFBOARD")
     time.sleep(5)
-    if not vehicle.mode == VehicleMode("POSCTL"):
+    if not vehicle.mode == VehicleMode("OFFBOARD"):
         
         print "Mode setup failed! Takeoff cancelled."
         return "Mode setup failed! Takeoff cancelled."
@@ -53,7 +53,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
-        if vehicle.mode == VehicleMode("POSCTL"):
+        if vehicle.mode == VehicleMode("OFFBOARD"):
             print " Altitude: ", vehicle.location.global_relative_frame.alt
             #Break and return from function just below target altitude.
             if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:

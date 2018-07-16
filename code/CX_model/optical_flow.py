@@ -4,7 +4,7 @@ from numpy import linalg as LA
 
 # compute calibration map matrixes
 DIM=(1296, 972)
-FRAME_DIM = (216, 162)
+FRAME_DIM = (324, 244)
 #K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
 #           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
 #D=np.array([[-0.8909302058344544], [3.1817023042732813], 
@@ -52,11 +52,11 @@ def get_speed(flow, left_filter, right_filter, elapsed_time):
     ''' calculate speeds from optical flow using match filters
     '''    
     mag = LA.norm(flow/left_filter, axis=2)
-    mag[mag < 2.0] = 0  # filter out those noisy flow
+    mag[mag < 2.5] = 0  # filter out those noisy flow
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
     #print count
-    weight = mag/(elapsed_time*count*100+1)
+    weight = mag/(elapsed_time*count*1000+1)
     weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
     sl = np.sum(flow * left_filter * weight)
     sr = np.sum(flow * right_filter * weight)

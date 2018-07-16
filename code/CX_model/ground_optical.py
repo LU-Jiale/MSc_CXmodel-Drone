@@ -22,7 +22,7 @@ for i in range(1):
     ret, frame1 = cap.read()      # Skip frames
     frame_num += 1
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = undistort(temp, 1.0)
+prvs = undistort(temp)
 prvs = frame_preprocess(prvs, scale=1.0, crop_size = [0.0, 0.0])
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
@@ -45,7 +45,7 @@ while(1):
     ret, frame2 = cap.read()
     frame_num += 1    
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = undistort(temp, 1.0)
+    next = undistort(temp)
     next = frame_preprocess(next, scale=1.0, crop_size = [0.0, 0.0])
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
