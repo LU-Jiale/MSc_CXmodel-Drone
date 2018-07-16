@@ -3,42 +3,7 @@ import socket
 import exceptions
 import time
 from dronekit import VehicleMode
-
-def arm_and_takeoff(vehicle, aTargetAltitude):
-    """
-    Arms vehicle and fly to aTargetAltitude.
-    ('Available modes: ', ['ALTCTL', 'STABILIZED', 'OFFBOARD', 'LAND', 'POSCTL', 'RTL', 
-    'MANUAL', 'MISSION', 'RATTITUDE', 'RTGS', 'LOITER', 'ACRO', 'FOLLOWME'])
-    """
-
-    print "Basic pre-arm checks"
-    # Don't try to arm until autopilot is ready
-    while not vehicle.is_armable:
-        print " Waiting for vehicle to initialise..."
-        time.sleep(1)
-
-    print "Arming motors"
-    # Copter should arm in GUIDVehicleMode("GUIDED")ED mode
-    vehicle.mode    = VehicleMode("GUIDED")
-    vehicle.armed   = True
-
-    # Confirm vehicle armed before attempting to take off
-    while not vehicle.armed:
-        print " Waiting for arming..."
-        time.sleep(1)
-
-    #print "Taking off!"
-    #vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
-
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
-    #  after Vehicle.simple_takeoff will execute immediately).
-    while True:
-        print " Altitude: ", vehicle.location.global_relative_frame.alt
-        #Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
-            print "Reached target altitude"
-            break
-        time.sleep(1)
+from drone_basic import arm, arm_and_takeoff
 
 # Try to connect to PX4
 try:
@@ -56,12 +21,58 @@ except dronekit.APIException:
 except:
     print 'Some other error!'
 
+# Get all vehicle attributes (state)
+print "\nGet all vehicle attribute values:"
+print " Autopilot Firmware version: %s" % vehicle.version
+print "   Major version number: %s" % vehicle.version.major
+print "   Minor version number: %s" % vehicle.version.minor
+print "   Patch version number: %s" % vehicle.version.patch
+print "   Release type: %s" % vehicle.version.release_type()
+print "   Release version: %s" % vehicle.version.release_version()
+print "   Stable release?: %s" % vehicle.version.is_stable()
+print " Autopilot capabilities"
+print "   Supports MISSION_FLOAT message type: %s" % vehicle.capabilities.mission_float
+print "   Supports PARAM_FLOAT message type: %s" % vehicle.capabilities.param_float
+print "   Supports MISSION_INT message type: %s" % vehicle.capabilities.mission_int
+print "   Supports COMMAND_INT message type: %s" % vehicle.capabilities.command_int
+print "   Supports PARAM_UNION message type: %s" % vehicle.capabilities.param_union
+print "   Supports ftp for file transfers: %s" % vehicle.capabilities.ftp
+print "   Supports commanding attitude offboard: %s" % vehicle.capabilities.set_attitude_target
+print "   Supports commanding position and velocity targets in local NED frame: %s" % vehicle.capabilities.set_attitude_target_local_ned
+print "   Supports set position + velocity targets in global scaled integers: %s" % vehicle.capabilities.set_altitude_target_global_int
+print "   Supports terrain protocol / data handling: %s" % vehicle.capabilities.terrain
+print "   Supports direct actuator control: %s" % vehicle.capabilities.set_actuator_target
+print "   Supports the flight termination command: %s" % vehicle.capabilities.flight_termination
+print "   Supports mission_float message type: %s" % vehicle.capabilities.mission_float
+print "   Supports onboard compass calibration: %s" % vehicle.capabilities.compass_calibration
+print " Global Location: %s" % vehicle.location.global_frame
+print " Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
+print " Local Location: %s" % vehicle.location.local_frame
+print " Attitude: %s" % vehicle.attitude
+print " Velocity: %s" % vehicle.velocity
+print " GPS: %s" % vehicle.gps_0
+print " Gimbal status: %s" % vehicle.gimbal
+print " Battery: %s" % vehicle.battery
+print " EKF OK?: %s" % vehicle.ekf_ok
+print " Last Heartbeat: %s" % vehicle.last_heartbeat
+print " Rangefinder: %s" % vehicle.rangefinder
+print " Rangefinder distance: %s" % vehicle.rangefinder.distance
+print " Rangefinder voltage: %s" % vehicle.rangefinder.voltage
+print " Heading: %s" % vehicle.heading
+print " Is Armable?: %s" % vehicle.is_armable
+print " System status: %s" % vehicle.system_status.state
+print " Groundspeed: %s" % vehicle.groundspeed    # settable
+print " Airspeed: %s" % vehicle.airspeed    # settable
+print " Mode: %s" % vehicle.mode.name    # settable
+print " Armed: %s" % vehicle.armed    # settable
+
 if vehicle:
     print('Mode:', vehicle.mode.name)
-    vehicle.mode = VehicleMode("ALTCTL")
-#    arm_and_takeoff(vehicle, 20)
-    for i in range(20):
-        if vehicle.mode == VehicleMode("ALTCTL"):
+    arm_and_takeoff(vehicle, 10)
+    time.sleep(10)
+    vehicle.mode = VehicleMode('LAND')
+''' for i in range(20):
+        if vehicle.mode == VehicleMode("OFFBOARD"):
             print('Heading:', vehicle.heading)
             print('Velocity:', vehicle.velocity)
             time.sleep(0.5)
@@ -71,4 +82,5 @@ if vehicle:
         else:
             print 'Interrupt from controller, mission is stopped.'
             break;
+'''
 vehicle.close()

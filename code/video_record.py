@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import logging, datetime
 import os, time
+import dronekit
 
 # initialize logger
 fname = 'log/' + str(datetime.datetime.now()).replace(':', '-') + '.log'
