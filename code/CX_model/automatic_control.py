@@ -25,9 +25,18 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,FRAME_DIM[0])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,FRAME_DIM[1])
 cap.set(cv2.CAP_PROP_FPS, 30)
+fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print("Frame size: {}*{}".format(fw, fh))
+# Define the codec and create VideoWriter object
+if sys.argv[1]:
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 if not cap.isOpened():
     logging.info('Camera not connected!')
     raise Exception('Camera not connected!')
+
+# initialize optical flow
 ret, frame1 = cap.read()
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = undistort(temp)
@@ -52,8 +61,8 @@ for i in range(100):
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
-    temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = undistort(temp)
+    frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
+    next = undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     # speed
     elapsed_time = time.time() - start_time
@@ -64,6 +73,9 @@ for i in range(100):
     tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
             heading=drone.heading/180*np.pi, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
 
+    # write the frame
+    if sys.argv[1]:
+        out.write(frame2)
     # logging
     logging.info('sl:{} sr:{} heading:{}, velocity:{}'.format(sl,sr,drone.heading,drone.velocity))
 
@@ -75,6 +87,8 @@ angle, distance = cx.decode_cpu4(cpu4)
 print((angle/np.pi) * 180, distance)
 logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
 drone.close()
+if sys.argv[1]:
+    out.release()
 cap.release()
 cv2.destroyAllWindows()
 
