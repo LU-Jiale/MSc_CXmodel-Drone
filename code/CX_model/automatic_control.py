@@ -66,7 +66,7 @@ state = arm(drone)
 logging.info(state)
 
 start_time = time.time()
-for i in range(100):
+for i in range(100000):
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
@@ -87,14 +87,14 @@ for i in range(100):
         out.write(frame2)
     # logging
     logging.info('sl:{} sr:{} heading:{}, velocity:{}'.format(sl,sr,drone.heading,drone.velocity))
+    angle, distance = cx.decode_cpu4(cpu4)
+    print((angle/np.pi) * 180, distance)
+    logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
 
     prvs = next
     start_time = time.time()
     print('Elapsed time:%.5f'%elapsed_time)
 
-angle, distance = cx.decode_cpu4(cpu4)
-print((angle/np.pi) * 180, distance)
-logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
 drone.close()
 if RECORDING != 'no':
     out.release()

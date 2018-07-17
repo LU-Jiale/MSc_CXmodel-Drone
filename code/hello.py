@@ -3,7 +3,7 @@ import socket
 import exceptions
 import time
 from dronekit import VehicleMode
-from drone_basic import arm, arm_and_takeoff, download_mission
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission
 
 # Try to connect to PX4
 try:
