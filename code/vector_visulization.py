@@ -29,7 +29,7 @@ def rotate_vector(vector, angle):
 fh = 200
 fw = 300
 
-vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(80.0/180.0*np.pi)
+vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
 horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
 
 D = np.ones([fh,fw,3])*-1

@@ -57,16 +57,42 @@ if vehicle:
     arm_and_takeoff(vehicle, 5)
     time.sleep(10)
     vehicle.mode = VehicleMode('LAND')
-''' for i in range(20):
-        if vehicle.mode == VehicleMode("OFFBOARD"):
-            print('Heading:', vehicle.heading)
-            print('Velocity:', vehicle.velocity)
-            time.sleep(0.5)
-            vehicle.armed   = True
-            time.sleep(2)
-            vehicle.armed   = False
-        else:
-            print 'Interrupt from controller, mission is stopped.'
+    
+    '''
+    print 'Create a new mission (for current location)'
+    adds_square_mission(vehicle.location.global_frame,50)
+
+
+    # From Copter 3.3 you will be able to take off using a mission item. Plane must take off using a mission item (currently).
+    arm_and_takeoff(5)
+
+    print "Starting mission"
+    # Reset mission set to first (0) waypoint
+    vehicle.commands.next=0
+
+    # Set mode to AUTO to start mission
+    vehicle.mode = VehicleMode("MISSION")
+
+
+    # Monitor mission. 
+    # Demonstrates getting and setting the command number 
+    # Uses distance_to_current_waypoint(), a convenience function for finding the 
+    #   distance to the next waypoint.
+
+    while vehicle.mode == VehicleMode('MISSION'):
+        nextwaypoint=vehicle.commands.next
+        print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
+  
+        if nextwaypoint==3: #Skip to next waypoint
+            print 'Skipping to Waypoint 5 when reach waypoint 3'
+            vehicle.commands.next = 5
+        if nextwaypoint==5: #Dummy waypoint - as soon as we reach waypoint 4 this is true and we exit.
+            print "Exit 'standard' mission when start heading to final waypoint (5)"
             break;
-'''
+        time.sleep(1)
+
+    print 'Return to launch'
+    vehicle.mode = VehicleMode("RTL")
+    '''
+
 vehicle.close()
