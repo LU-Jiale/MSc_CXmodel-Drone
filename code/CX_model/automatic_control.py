@@ -40,7 +40,7 @@ print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
 if RECORDING != 'no':
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
+    out = cv2.VideoWriter(RECORDING,fourcc, 20.0, (fw,fh))
 if not cap.isOpened():
     logging.info('Camera not connected!')
     raise Exception('Camera not connected!')

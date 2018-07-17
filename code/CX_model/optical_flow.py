@@ -4,7 +4,8 @@ from numpy import linalg as LA
 
 # compute calibration map matrixes
 DIM=(1296, 972)
-FRAME_DIM = (324, 244)
+#FRAME_DIM = (324, 244)
+FRAME_DIM = (216, 162)
 #K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
 #           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
 #D=np.array([[-0.8909302058344544], [3.1817023042732813], 
