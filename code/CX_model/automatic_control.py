@@ -92,7 +92,7 @@ for i in range(100000):
     logging.info('sl:{} sr:{} heading:{} velocity:{} position:{}'.format(
                 sl,sr,drone.heading,drone.velocity, drone.location.global_relative_frame))
     angle, distance = cx.decode_cpu4(cpu4)
-    logging.info('Angle:{} Distance:{} elapsed_time:'.format(
+    logging.info('Angle:{} Distance:{} elapsed_time:{}'.format(
                  (angle/np.pi) * 180, distance, elapsed_time))
 
     prvs = next
