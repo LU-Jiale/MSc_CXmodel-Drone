@@ -1,6 +1,7 @@
 import numpy as np
 import sys, os, time
 import logging, datetime
+import argparse
 import cv2
 import cx_rate, cx_basic
 import central_complex
@@ -9,6 +10,14 @@ from graphics import draw_flow, frame_preprocess
 from optical_flow import undistort, get_filter, get_speed, FRAME_DIM
 from central_complex import update_cells
 from drone_basic import arm, arm_and_takeoff
+
+# command line arguments halder
+parser = argparse.ArgumentParser(description='CX model navigation.')
+parser.add_argument('--recordto', default = 'no', 
+                    help='Video name for recording, set to \'no\' to disable(default: no)')
+
+args = parser.parse_args()
+RECORDING = args.recordto
 
 # initialize logger
 fname = 'log/' + str(datetime.datetime.now()).replace(':', '-') + '.log'
@@ -29,7 +38,7 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-if sys.argv[1]:
+if RECORDING != 'no':
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(sys.argv[1],fourcc, 20.0, (fw,fh))
 if not cap.isOpened():
@@ -74,7 +83,7 @@ for i in range(100):
             heading=drone.heading/180*np.pi, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
 
     # write the frame
-    if sys.argv[1]:
+    if RECORDING != 'no':
         out.write(frame2)
     # logging
     logging.info('sl:{} sr:{} heading:{}, velocity:{}'.format(sl,sr,drone.heading,drone.velocity))
@@ -87,7 +96,7 @@ angle, distance = cx.decode_cpu4(cpu4)
 print((angle/np.pi) * 180, distance)
 logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
 drone.close()
-if sys.argv[1]:
+if RECORDING != 'no':
     out.release()
 cap.release()
 cv2.destroyAllWindows()
