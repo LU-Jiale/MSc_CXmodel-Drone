@@ -13,14 +13,15 @@ from drone_basic import arm, arm_and_takeoff
 
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
-parser.add_argument('--recordto', default = 'no', 
-                    help='Video name for recording, set to \'no\' to disable(default: no)')
+parser.add_argument('--recording', default = 'no', 
+                    help='Recoding option, yes or no(default: no)')
 
 args = parser.parse_args()
-RECORDING = args.recordto
+RECORDING = args.recording
 
 # initialize logger
-fname = 'log/' + str(datetime.datetime.now()).replace(':', '-') + '.log'
+time_string = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_')
+fname = 'log/' + time_string + '.log'
 logging.basicConfig(filename=fname,level=logging.DEBUG)
 
 # initialize CX model
@@ -39,8 +40,9 @@ fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
 if RECORDING != 'no':
+    fname = 'video/' + time_string + '.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(RECORDING,fourcc, 20.0, (fw,fh))
+    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh))
 if not cap.isOpened():
     logging.info('Camera not connected!')
     raise Exception('Camera not connected!')
@@ -75,6 +77,7 @@ for i in range(100000):
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     # speed
     elapsed_time = time.time() - start_time
+    start_time = time.time()
     sl, sr = get_speed(flow, left_filter, right_filter, elapsed_time)
 
     # updare cx_neurons
@@ -86,15 +89,16 @@ for i in range(100000):
     if RECORDING != 'no':
         out.write(frame2)
     # logging
-    logging.info('sl:{} sr:{} heading:{}, velocity:{}'.format(sl,sr,drone.heading,drone.velocity))
+    logging.info('sl:{} sr:{} heading:{} velocity:{} position:{}'.format(
+                sl,sr,drone.heading,drone.velocity, drone.location.global_relative_frame))
     angle, distance = cx.decode_cpu4(cpu4)
-    print((angle/np.pi) * 180, distance)
-    logging.info('Angle:{} Distance:{}'.format((angle/np.pi) * 180, distance))
+    logging.info('Angle:{} Distance:{} elapsed_time:'.format(
+                 (angle/np.pi) * 180, distance, elapsed_time))
 
     prvs = next
-    start_time = time.time()
     print('Elapsed time:%.5f'%elapsed_time)
 
+print((angle/np.pi) * 180, distance)
 drone.close()
 if RECORDING != 'no':
     out.release()
