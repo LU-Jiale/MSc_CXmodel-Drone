@@ -1,6 +1,6 @@
 import time
 import dronekit
-from dronekit import VehicleMode
+from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 
 '''Basic control functions for drone(F450)
 
@@ -159,12 +159,15 @@ def get_distance_metres(aLocation1, aLocation2):
 
 
 def goto(vehicle, dNorth, dEast, gotoFunction):
+    """
+    
+    """
     currentLocation=vehicle.location.global_relative_frame
     targetLocation=get_location_metres(currentLocation, dNorth, dEast)
     targetDistance=get_distance_metres(currentLocation, targetLocation)
     gotoFunction(targetLocation)
 
-    while vehicle.mode.name=="GUIDED": #Stop action if we are no longer in guided mode.
+    while vehicle.mode.name=="OFFBOARD": #Stop action if we are no longer in offboard mode.
         remainingDistance=get_distance_metres(vehicle.location.global_frame, targetLocation)
         print "Distance to target: ", remainingDistance
         if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
@@ -173,7 +176,7 @@ def goto(vehicle, dNorth, dEast, gotoFunction):
         time.sleep(2)
 
 
-def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
+def send_global_velocity(vehicle, velocity_x, velocity_y, velocity_z, duration):
     """
     Move vehicle in direction based on specified velocity vectors.
     """
@@ -198,7 +201,7 @@ def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
         time.sleep(1)
 
 
-def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
+def send_ned_velocity(vehicle, velocity_x, velocity_y, velocity_z, duration):
     """
     Move vehicle in direction based on specified velocity vectors and
     for the specified duration.
@@ -231,7 +234,7 @@ def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
         time.sleep(1)
 
 
-def goto_position_target_global_int(aLocation):
+def goto_position_target_global_int(vehicle, aLocation):
     """
     Send SET_POSITION_TARGET_GLOBAL_INT command to request the vehicle fly to a specified location.
     """
@@ -253,7 +256,7 @@ def goto_position_target_global_int(aLocation):
     vehicle.send_mavlink(msg)
 
 
-def goto_position_target_local_ned(north, east, down):
+def goto_position_target_local_ned(vehicle, north, east, down):
     """
     Send SET_POSITION_TARGET_LOCAL_NED command to request the vehicle fly to a specified
     location in the North, East, Down frame.
@@ -271,7 +274,7 @@ def goto_position_target_local_ned(north, east, down):
     vehicle.send_mavlink(msg)
 
 
-def adds_square_mission(aLocation, aSize):
+def adds_square_mission(vehicle, aLocation, aSize):
     """
     Adds a takeoff command and four waypoint commands to the current mission. 
     The waypoints are positioned to form a square of side length 2*aSize around the specified LocationGlobal (aLocation).

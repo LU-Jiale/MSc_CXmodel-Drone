@@ -47,6 +47,21 @@ time.sleep(15)
 
 if vehicle:
     print('Mode:', vehicle.mode.name)
+    # old mission
+    cmds = download_mission(vehicle)
+    print ('Waypoint numbers: ', cmds.count)
+    missionlist=[]
+    for cmd in cmds:
+        missionlist.append(cmd)
+        print(cmd.x, cmd.y, cmd.z)
+    
+    # modify mission
+    cmd = missionlist[0]
+    startlocation=LocationGlobal(cmd.x, cmd.y,cmd.z)
+    adds_square_mission(vehicle, startlocation, 50)
+    time.sleep(3)
+
+    # new mission
     cmds = download_mission(vehicle)
     print ('Waypoint numbers: ', cmds.count)
     missionlist=[]
