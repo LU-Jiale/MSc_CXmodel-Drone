@@ -14,7 +14,7 @@ from drone_basic import arm, arm_and_takeoff
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
 parser.add_argument('--recording', default = 'no', 
-                    help='Recoding option, yes or no(default: no)')
+                    help='Recoding option, true or false(default: false)')
 
 args = parser.parse_args()
 RECORDING = args.recording
@@ -39,7 +39,7 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 # Define the codec and create VideoWriter object
-if RECORDING != 'no':
+if RECORDING == 'true':
     fname = 'video/' + time_string + '.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh))
@@ -86,7 +86,7 @@ for i in range(100000):
             heading=drone.heading/180*np.pi, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
 
     # write the frame
-    if RECORDING != 'no':
+    if RECORDING == 'true':
         out.write(frame2)
     # logging
     logging.info('sl:{} sr:{} heading:{} velocity:{} position:{}'.format(
@@ -100,7 +100,7 @@ for i in range(100000):
 
 print((angle/np.pi) * 180, distance)
 drone.close()
-if RECORDING != 'no':
+if RECORDING == 'true':
     out.release()
 cap.release()
 cv2.destroyAllWindows()

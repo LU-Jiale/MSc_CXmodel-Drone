@@ -43,8 +43,8 @@ def get_filter(fh, fw):
     sin_theta = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
     mag_temp = LA.norm(D, axis = 2) + 0.0000001
     D /= mag_temp.reshape(fh,fw,1)
-    a_l = a = np.array([-1/np.sqrt(2), 1/np.sqrt(2), 0])
-    a_r = a = np.array([-1/np.sqrt(2), -1/np.sqrt(2), 0])
+    a_l = a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
+    a_r = a = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
     left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] #/ sin_theta.reshape(fh,fw,1)
     right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] #/ sin_theta.reshape(fh,fw,1)
     return left_filter, right_filter
@@ -53,11 +53,11 @@ def get_speed(flow, left_filter, right_filter, elapsed_time):
     ''' calculate speeds from optical flow using match filters
     '''    
     mag = LA.norm(flow/left_filter, axis=2)
-    mag[mag < 2.5] = 0  # filter out those noisy flow
+    mag[mag < 1.0] = 0  # filter out those noisy flow
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
-    #print count
-    weight = mag/(elapsed_time*count*1000+1)
+    print count
+    weight = mag/(elapsed_time*count*100+1)
     weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
     sl = np.sum(flow * left_filter * weight)
     sr = np.sum(flow * right_filter * weight)

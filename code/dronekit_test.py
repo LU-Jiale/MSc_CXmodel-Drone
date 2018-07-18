@@ -57,7 +57,8 @@ if vehicle:
     arm_and_takeoff(vehicle, 5)
     time.sleep(10)
     vehicle.mode = VehicleMode('LAND')
-    
+    while True:
+        print " Heading: %s" % vehicle.heading
     '''
     print 'Create a new mission (for current location)'
     adds_square_mission(vehicle.location.global_frame,50)

@@ -18,7 +18,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 frame_num = 0 
 cap = cv2.VideoCapture(sys.argv[1])
 
-for i in range(1):              
+for i in range(250):              
     ret, frame1 = cap.read()      # Skip frames
     frame_num += 1
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
@@ -37,9 +37,31 @@ speed_left = np.zeros(100)
 speed_right = np.zeros(100)
 plt.show()
 
+# load log file
+error_log_path = 'log/2018-07-18_14-02-55.679331.log'
+with open(error_log_path) as f:
+    data = f.read()
+data = data.split('\n')
+del data[0]
+
+navigation_info = []
+model_info = []
+for i in range(len(data)/2):
+    navigation_info.append(data[2*i])
+    model_info.append(data[2*i+1])
+print navigation_info[0]
+print model_info[0]
+
+distance_list = []
+time_list = []
+for i in range(len(navigation_info)):
+    distance = model_info[i].split('Distance:')[-1].split(' ')[0]
+    distance_list.append(float(distance))
+
+    elapsed_time = model_info[i].split('elapsed_time:')[-1]
+    time_list.append(float(elapsed_time))
 
 left_filter, right_filter = get_filter(fh, fw)
-start_time = time.time()
 while(1):    
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
@@ -50,14 +72,13 @@ while(1):
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
     # speed
-    elapsed_time = time.time() - start_time
-    sl, sr = get_speed(flow, left_filter, right_filter, elapsed_time)
+    sl, sr = get_speed(flow, left_filter, right_filter, time_list[frame_num])
 
     # visulize computed speed 
-    speed_left = np.roll(speed_left, 1)
-    speed_left[0] = (sl) # + np.sum(speed_left[1:3]))/4
-    speed_right = np.roll(speed_right, 1)
-    speed_right[0] = (sr) # + np.sum(speed_right[1:3]))/4
+    speed_left = np.roll(speed_left, -1)
+    speed_left[-1] = (sl) # + np.sum(speed_left[1:3]))/4
+    speed_right = np.roll(speed_right, -1)
+    speed_right[-1] = (sr) # + np.sum(speed_right[1:3]))/4
     ax1.clear()
     ax2.clear()
     ax1.plot(x_axis, speed_left, 'r-')
