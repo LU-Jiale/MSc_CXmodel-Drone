@@ -44,11 +44,11 @@ for i in range(len(navigation_info)):
     velocity = [float(j) for j in velocity]
     velocity_list.append((velocity))
     
-    left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/2) + 
-                velocity[1]*np.cos(heading/180.0*np.pi-np.pi/2))
+    left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/4) + 
+                velocity[1]*np.cos(heading/180.0*np.pi-np.pi/4-np.pi/2))
     speed_left_real.append(-left_real/100.0)
-    right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/2) + 
-                velocity[1]*np.cos(heading/180.0*np.pi+np.pi/2))
+    right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/4) + 
+                velocity[1]*np.cos(heading/180.0*np.pi+np.pi/4-np.pi/2))
     speed_right_real.append(-right_real/100.0)
 
     alt = navigation_info[i].split('alt=')[-1]
@@ -75,6 +75,6 @@ x_axis = np.linspace(0, len(navigation_info), num=len(navigation_info), endpoint
 ax1.plot(x_axis, speed_left, 'r-')
 ax1.plot(x_axis, speed_left_real, 'b-')
 ax2.plot(x_axis, speed_right, 'r-')
-ax2.plot(x_axis, heading_list, 'b-')
+ax2.plot(x_axis, speed_right_real, 'b-')
 plt.draw()
 plt.show()

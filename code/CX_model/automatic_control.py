@@ -20,14 +20,18 @@ args = parser.parse_args()
 RECORDING = args.recording
 
 # initialize logger
-time_string = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_')
+time_string = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_').split('.')[0]
 fname = 'log/' + time_string + '.log'
 logging.basicConfig(filename=fname,level=logging.DEBUG)
 
-# initialize CX model
-cx = cx_rate.CXRate(noise = 0)
-tb1 = np.zeros(central_complex.N_TB1)
-memory = 0.5 * np.ones(central_complex.N_CPU4)
+# initialize CX models
+cx_optical = cx_rate.CXRate(noise = 0)
+tb1_optical = np.zeros(central_complex.N_TB1)
+memory_optical = 0.5 * np.ones(central_complex.N_CPU4)
+
+cx_gps = cx_rate.CXRate(noise = 0)
+tb1_gps = np.zeros(central_complex.N_TB1)
+memory_gps = 0.5 * np.ones(central_complex.N_CPU4)
 
 # initialize camera and optical flow
 frame_num = 0
@@ -80,20 +84,30 @@ for i in range(100000):
     start_time = time.time()
     sl, sr = get_speed(flow, left_filter, right_filter, elapsed_time)
 
-    # updare cx_neurons
+    # update CX neurons
+    drone_heading = drone.heading/180*np.pi
     velocity = np.array([sl, sr])
-    tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
-            heading=drone.heading/180*np.pi, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
+    __, __, tb1_optical, __, __, memory_optical, cpu4_optical, __, motor_optical = update_cells(
+            heading=drone_heading, velocity=velocity, tb1=tb1_optical, memory=memory, cx=cx)
 
-    # write the frame
+    velocity = drone.velocity
+    velocity = velocity.replace('[', '').replace(']','').split(', ')
+    if velocity[0] != 'None':
+        velocity = [float(j) for j in velocity]
+        __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = update_cells(
+                heading=drone_heading, velocity=velocity, tb1=tb1_optical, memory=memory, cx=cx)
+
+    # write the frame for later recheck
     if RECORDING == 'true':
         out.write(frame2)
     # logging
     logging.info('sl:{} sr:{} heading:{} velocity:{} position:{}'.format(
                 sl,sr,drone.heading,drone.velocity, drone.location.global_relative_frame))
-    angle, distance = cx.decode_cpu4(cpu4)
-    logging.info('Angle:{} Distance:{} elapsed_time:{}'.format(
-                 (angle/np.pi) * 180, distance, elapsed_time))
+    angle_optical, distance_optical = cx_optical.decode_cpu4(cpu4_optical)
+    angle_gps, distance_gps = cx_gps.decode_cpu4(cpu4_gps)
+    logging.info('Angle_optical:{} Distance_optical:{} Angle_optical:{} Distance_optical:{} \
+                 elapsed_time:{}'.format((angle_optical/np.pi)*180, distance_optical, \
+                 angle_gps, distance_gps, elapsed_time))
 
     prvs = next
     print('Elapsed time:%.5f'%elapsed_time)
