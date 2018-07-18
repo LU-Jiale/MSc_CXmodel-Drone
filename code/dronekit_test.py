@@ -2,8 +2,9 @@ import dronekit
 import socket
 import exceptions
 import time
-from dronekit import VehicleMode
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission
+from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission
+from pymavlink import mavutil
 
 # Try to connect to PX4
 try:
@@ -43,7 +44,7 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-time.sleep(15)
+time.sleep(5)
 
 if vehicle:
     print('Mode:', vehicle.mode.name)
@@ -55,8 +56,9 @@ if vehicle:
         missionlist.append(cmd)
         print(cmd.x, cmd.y, cmd.z)
     
+    time.sleep(10)
     # modify mission
-    cmd = missionlist[0]
+    cmd = missionlist[1]
     startlocation=LocationGlobal(cmd.x, cmd.y,cmd.z)
     adds_square_mission(vehicle, startlocation, 50)
     time.sleep(3)
