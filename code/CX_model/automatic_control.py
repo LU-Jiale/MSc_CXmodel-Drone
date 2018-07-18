@@ -32,6 +32,7 @@ memory_optical = 0.5 * np.ones(central_complex.N_CPU4)
 cx_gps = cx_rate.CXRate(noise = 0)
 tb1_gps = np.zeros(central_complex.N_TB1)
 memory_gps = 0.5 * np.ones(central_complex.N_CPU4)
+cpu4_gps = np.zeros(16)
 
 # initialize camera and optical flow
 frame_num = 0
@@ -87,15 +88,20 @@ for i in range(100000):
     # update CX neurons
     drone_heading = drone.heading/180*np.pi
     velocity = np.array([sl, sr])
-    __, __, tb1_optical, __, __, memory_optical, cpu4_optical, __, motor_optical = update_cells(
-            heading=drone_heading, velocity=velocity, tb1=tb1_optical, memory=memory, cx=cx)
+    __, __, tb1_optical, __, __, memory_optical, cpu4_optical, __, motor_optical = \
+            update_cells(heading=drone_heading, velocity=velocity, tb1=tb1_optical, \
+                         memory=memory_optical, cx=cx_optical)
 
     velocity = drone.velocity
-    velocity = velocity.replace('[', '').replace(']','').split(', ')
-    if velocity[0] != 'None':
-        velocity = [float(j) for j in velocity]
-        __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = update_cells(
-                heading=drone_heading, velocity=velocity, tb1=tb1_optical, memory=memory, cx=cx)
+    if velocity[0]:
+        left_real = (velocity[0]*np.cos(drone_heading-np.pi/4) + \
+                     velocity[1]*np.cos(drone_heading-np.pi/4-np.pi/2))
+        right_real = (velocity[0]*np.cos(drone_heading+np.pi/4) + \
+                      velocity[1]*np.cos(drone_heading+np.pi/4-np.pi/2))
+        velocity = [left_real, right_real]
+        __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = \
+                update_cells(heading=drone_heading, velocity=velocity, \
+                             tb1=tb1_optical, memory=memory_gps, cx=cx_gps)
 
     # write the frame for later recheck
     if RECORDING == 'true':
