@@ -52,13 +52,11 @@ if vehicle:
     missionlist=[]
     for cmd in cmds:
         missionlist.append(cmd)
-        print(cmd.command)
+        print(cmd.x, cmd.y, cmd.z)
 
-    arm_and_takeoff(vehicle, 5)
+#    arm_and_takeoff(vehicle, 5)
     time.sleep(10)
-    vehicle.mode = VehicleMode('LAND')
-    while True:
-        print " Heading: %s" % vehicle.heading
+#    vehicle.mode = VehicleMode('LAND')
     '''
     print 'Create a new mission (for current location)'
     adds_square_mission(vehicle.location.global_frame,50)
