@@ -28,7 +28,7 @@ def undistort(img):
     assert dim1[0]/dim1[1] == DIM[0]/DIM[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
     # crop images 
-    return undistorted_img[43:140, 18:-1] #[70:200,18:-1]
+    return undistorted_img[21:118, 18:-1] #[70:200,18:-1]
 
 def get_filter(fh, fw):
     ''' Generate match filter for optical flow computation, one for left 45 degree 
