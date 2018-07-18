@@ -2,6 +2,7 @@ import dronekit
 import socket
 import exceptions
 import time
+import cv2
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission
 from pymavlink import mavutil
@@ -44,10 +45,14 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-time.sleep(5)
+print 'Check the status, press \'g\' to continue, \'q\' to quit'
+char = cv2.waitKey()
+if char & 0xFF == ord('q'):
+    return 0
+elif char & 0xFF == ord('g'):
+    print 'Mission start.'
 
 if vehicle:
-    print('Mode:', vehicle.mode.name)
     # old mission
     cmds = download_mission(vehicle)
     print ('Waypoint numbers: ', cmds.count)
@@ -73,7 +78,7 @@ if vehicle:
 
 #    arm_and_takeoff(vehicle, 5)
     time.sleep(10)
-#    vehicle.mode = VehicleMode('LAND')
+    vehicle.mode = VehicleMode('GUIDED')
     '''
     print 'Create a new mission (for current location)'
     adds_square_mission(vehicle.location.global_frame,50)
