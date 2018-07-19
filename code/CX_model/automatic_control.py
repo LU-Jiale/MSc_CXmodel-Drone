@@ -72,8 +72,13 @@ except:
 #state = arm(drone)
 #logging.info(state)
 
+while drone.mode.name != "MISSION":
+    print "Waiting for the mission mode."
+    time.sleep(2)
+
 start_time = time.time()
-for i in range(100000):
+
+while drone.mode.name == "MISSION":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
@@ -101,7 +106,7 @@ for i in range(100000):
         velocity = np.array([left_real, right_real])
         __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = \
                 update_cells(heading=drone_heading, velocity=velocity, \
-                             tb1=tb1_optical, memory=memory_gps, cx=cx_gps)
+                             tb1=tb1_gps, memory=memory_gps, cx=cx_gps)
 
     # write the frame for later recheck
     if RECORDING == 'true':
@@ -111,9 +116,9 @@ for i in range(100000):
                 sl,sr,drone.heading,drone.velocity, drone.location.global_relative_frame))
     angle_optical, distance_optical = cx_optical.decode_cpu4(cpu4_optical)
     angle_gps, distance_gps = cx_gps.decode_cpu4(cpu4_gps)
-    logging.info('Angle_optical:{} Distance_optical:{} Angle_optical:{} Distance_optical:{} \
+    logging.info('Angle_optical:{} Distance_optical:{} Angle_gps:{} Distance_gps:{} \
                  elapsed_time:{}'.format((angle_optical/np.pi)*180, distance_optical, \
-                 angle_gps, distance_gps, elapsed_time))
+                 (angle_gps/np.pi)*180, distance_gps, elapsed_time))
 
     prvs = next
     print('Elapsed time:%.5f'%elapsed_time)

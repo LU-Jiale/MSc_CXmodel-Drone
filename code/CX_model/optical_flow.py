@@ -45,19 +45,38 @@ def get_filter(fh, fw):
     D /= mag_temp.reshape(fh,fw,1)
     a_l = a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
     a_r = a = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
-    left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] #/ sin_theta.reshape(fh,fw,1)
-    right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] #/ sin_theta.reshape(fh,fw,1)
+    left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
+    right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
     return left_filter, right_filter
+
+
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+
+
+def pol2cart(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
+
 
 def get_speed(flow, left_filter, right_filter, elapsed_time):
     ''' calculate speeds from optical flow using match filters
     '''    
     mag = LA.norm(flow/left_filter, axis=2)
-    mag[mag < 1.0] = 0  # filter out those noisy flow
+    
+    mag[mag < 2.0] = 0  # filter out those noisy flow
     mag[mag > 0.0] = 1.0
     count = np.sum(mag)
-    print count
-    weight = mag/(elapsed_time*count*100+1)
+
+    (rho, phi) = cart2pol(flow[:,:,0], flow[:,:,1])
+    mean = np.mean(phi)
+    phi_diff = phi-mean
+    phi_diff[np.abs(phi_diff)>np.pi/2] = np.pi/2
+    #print count
+    weight = mag/(elapsed_time*count*50+1) * np.cos(phi_diff)
     weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
     sl = np.sum(flow * left_filter * weight)
     sr = np.sum(flow * right_filter * weight)

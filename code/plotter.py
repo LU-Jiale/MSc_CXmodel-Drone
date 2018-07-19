@@ -3,11 +3,11 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-error_log_path = 'CX_model/log/2018-07-18_14-02-55.679331.log'
+error_log_path = 'CX_model/log/2018-07-19_07-47-37.log'
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')
-del data[0]
+#del data[0]
 
 navigation_info = []
 model_info = []
@@ -31,6 +31,9 @@ lat_list = []
 lon_list = []
 time_list = []
 distance_list = []
+distance_list2 = []
+angle_list1 = []
+angle_list2 = []
 for i in range(len(navigation_info)):
     sl=navigation_info[i].split(' ')[0].split(':')[-1]
     sr=navigation_info[i].split(' ')[1].split(':')[-1]
@@ -46,10 +49,10 @@ for i in range(len(navigation_info)):
     
     left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi-np.pi/4-np.pi/2))
-    speed_left_real.append(-left_real/100.0)
+    speed_left_real.append(left_real/10.0)
     right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi+np.pi/4-np.pi/2))
-    speed_right_real.append(-right_real/100.0)
+    speed_right_real.append(right_real/10.0)
 
     alt = navigation_info[i].split('alt=')[-1]
     alt_list.append(float(alt))
@@ -60,21 +63,37 @@ for i in range(len(navigation_info)):
 
     elapsed_time = model_info[i].split('elapsed_time:')[-1]
     time_list.append(float(elapsed_time))
-    distance = model_info[i].split('Distance:')[-1].split(' ')[0]
-    distance_list.append(float(distance))
+    distance = model_info[i].split('Distance_optical:')[1].split(' ')[0]
+    distance_list.append(float(distance)/100)
+    
+    distance = model_info[i].split('Distance_optical:')[-1].split(' ')[0]
+    distance_list2.append(float(distance)/100)
+
+    angle = model_info[i].split('Angle_optical:')[1].split(' ')[0]
+    angle_list1.append(float(angle))
+    angle = model_info[i].split('Angle_optical:')[-1].split(' ')[0]
+    angle_list2.append(float(angle)/np.pi*180)
 
 print("Data number:", len(heading_list))
 
 
 
-fig, (ax1, ax2) = plt.subplots(2, sharey=True)
+fig, (ax1, ax2, ax3) = plt.subplots(3, sharey=True)
 ax1.set(title='speed', ylabel='left')
-ax2.set(xlabel='time (s)', ylabel='right')
+ax2.set(xlabel='', ylabel='right')
+ax2.set(xlabel='time (s)', ylabel='Distance')
 x_axis = np.linspace(0, len(navigation_info), num=len(navigation_info), endpoint=False)
 
 ax1.plot(x_axis, speed_left, 'r-')
 ax1.plot(x_axis, speed_left_real, 'b-')
 ax2.plot(x_axis, speed_right, 'r-')
 ax2.plot(x_axis, speed_right_real, 'b-')
+ax3.plot(x_axis, distance_list, 'r-')
+ax3.plot(x_axis, distance_list2, 'b-')
+
+fig2, (ax4, ax5) = plt.subplots(2, sharey=True)
+ax4.plot(x_axis, angle_list1, 'r-')
+ax4.plot(x_axis, angle_list2, 'b-')
+ax5.plot(x_axis, heading_list, 'r-')
 plt.draw()
 plt.show()

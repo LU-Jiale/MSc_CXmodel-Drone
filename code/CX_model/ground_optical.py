@@ -18,7 +18,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 frame_num = 0 
 cap = cv2.VideoCapture(sys.argv[1])
 
-for i in range(250):              
+for i in range(10):              
     ret, frame1 = cap.read()      # Skip frames
     frame_num += 1
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
@@ -27,44 +27,38 @@ prvs = frame_preprocess(prvs, scale=1.0, crop_size = [0.0, 0.0])
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
 
-# visulize computed speed 
-plt.ion()
-fig, (ax1, ax2) = plt.subplots(2, sharey=True)
-ax1.set(title='speed', ylabel='left')
-ax2.set(xlabel='time (s)', ylabel='right')
-x_axis = np.linspace(0, 100, num=100, endpoint=False)
-speed_left = np.zeros(100)
-speed_right = np.zeros(100)
-plt.show()
-
 # load log file
-error_log_path = 'log/2018-07-18_14-02-55.679331.log'
+error_log_path = 'log/2018-07-19_07-47-37.log'
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')
-del data[0]
 
 navigation_info = []
 model_info = []
 for i in range(len(data)/2):
     navigation_info.append(data[2*i])
     model_info.append(data[2*i+1])
-print navigation_info[0]
-print model_info[0]
-
-distance_list = []
 time_list = []
 for i in range(len(navigation_info)):
-    distance = model_info[i].split('Distance:')[-1].split(' ')[0]
-    distance_list.append(float(distance))
-
     elapsed_time = model_info[i].split('elapsed_time:')[-1]
     time_list.append(float(elapsed_time))
 
+# visulize computed speed 
+plt.ion()
+fig, (ax1, ax2) = plt.subplots(2, sharey=True)
+ax1.set(title='speed', ylabel='left')
+ax2.set(xlabel='time (s)', ylabel='right')
+x_axis = np.linspace(0, len(time_list), num=len(time_list), endpoint=False)
+speed_left = np.zeros(len(time_list))
+speed_right = np.zeros(len(time_list))
+plt.show()
+
 left_filter, right_filter = get_filter(fh, fw)
-while(1):    
+for i in range(len(time_list)-frame_num-1):    
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
+    if not ret:
+        break
     frame_num += 1    
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = undistort(temp)
@@ -76,13 +70,13 @@ while(1):
 
     # visulize computed speed 
     speed_left = np.roll(speed_left, -1)
-    speed_left[-1] = (sl) # + np.sum(speed_left[1:3]))/4
+    speed_left[-1] = (sl) # + np.sum(speed_left[-3:-1]))/4
     speed_right = np.roll(speed_right, -1)
-    speed_right[-1] = (sr) # + np.sum(speed_right[1:3]))/4
+    speed_right[-1] = (sr) # + np.sum(speed_right[-3:-1]))/4Z
     ax1.clear()
     ax2.clear()
     ax1.plot(x_axis, speed_left, 'r-')
-    ax1.plot(x_axis, speed_right, 'b-')
+    ax2.plot(x_axis, speed_right, 'b-')
     plt.draw()
 
     # updare cx_neurons
@@ -99,6 +93,8 @@ while(1):
         break
     prvs = next
     start_time = time.time()
+
+cv2.waitKey()
 cap.release()
 cv2.destroyAllWindows()
 

@@ -26,8 +26,8 @@ def rotate_vector(vector, angle):
     vector[0] = rho * np.sin(phi_l)     # y axis
     
 
-fh = 200
-fw = 300
+fh = 97
+fw = 197
 
 vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
 horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
@@ -42,7 +42,7 @@ mag_temp = LA.norm(D, axis = 2) + 0.0000001
 normlizer = mag_temp.reshape(fh,fw,1)
 D /= normlizer
 
-a = np.array([-1, 0, 0])
+a = np.array([1, 1, 0])
 matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
 # show vector map
 img = np.ones([fh,fw,3])
@@ -55,7 +55,7 @@ for i in range(fh):
         D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
         D[i,j] /= LA.norm(D[i,j])
 
-a = np.array([-1, 0, 0])
+a = np.array([1, -1, 0])
 matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
 # show vector map
 img = np.ones([fh,fw,3])
