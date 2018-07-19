@@ -54,6 +54,7 @@ if vehicle:
 
     # wait for the vehicle to land
     while vehicle.commands.next > 0:
+        print "Waitin for landing."
         time.sleep(1)
 
     # Disarm vehicle

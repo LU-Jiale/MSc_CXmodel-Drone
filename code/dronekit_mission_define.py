@@ -4,7 +4,7 @@ import exceptions
 import time
 import cv2
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode, get_location_metres
 from pymavlink import mavutil
 
 # Try to connect to PX4
@@ -45,14 +45,17 @@ if char == 'q':
 else:
     print 'Mission start.'
 
+vehicle.mode = VehicleMode("MISSION")
 if vehicle:
     #Callback to print the location in global frames. 'value' is the updated value
     def location_callback(self, attr_name, value):
-    print "Location (Global): ", value
+        print ("Location (Global): ", value)
 
 
     # Add a callback `location_callback` for the `global_frame` attribute.
     vehicle.add_attribute_listener('location.global_frame', location_callback)
+
+    
 
     # Load commands
     cmds = vehicle.commands
@@ -61,17 +64,28 @@ if vehicle:
     home = vehicle.location.global_relative_frame
 
     # takeoff to 10 meters
-    wp = get_location_offset_meters(home, 0, 0, 10);
-    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+    wp = get_location_metres(home, 0, 0);
+    cmd = Command(0,0,8979879879870, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
                   mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
     cmds.add(cmd)
-    
+
+    # move 10 meters south
+    wp = get_location_metres(wp, -10, 0);
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+    cmds.add(cmd)
+
+    # move 10 meters west
+    wp = get_location_meters(wp, 0, -10);
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+    cmds.add(cmd)
     
     # land
-    wp = get_location_offset_meters(home, 0, 0, 10);
+    wp = get_location_metres(home, 0, 0);
     cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
                   mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
-     cmds.add(cmd)
+    cmds.add(cmd)
 
     # Upload mission
     cmds.upload()
