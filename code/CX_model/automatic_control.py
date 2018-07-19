@@ -69,8 +69,8 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-state = arm(drone)
-logging.info(state)
+#state = arm(drone)
+#logging.info(state)
 
 start_time = time.time()
 for i in range(100000):
@@ -98,7 +98,7 @@ for i in range(100000):
                      velocity[1]*np.cos(drone_heading-np.pi/4-np.pi/2))
         right_real = (velocity[0]*np.cos(drone_heading+np.pi/4) + \
                       velocity[1]*np.cos(drone_heading+np.pi/4-np.pi/2))
-        velocity = [left_real, right_real]
+        velocity = np.array([left_real, right_real])
         __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = \
                 update_cells(heading=drone_heading, velocity=velocity, \
                              tb1=tb1_optical, memory=memory_gps, cx=cx_gps)
