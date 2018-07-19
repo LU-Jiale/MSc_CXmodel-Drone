@@ -13,11 +13,16 @@ from pymavlink import mavutil
 
 '''
 
-def download_mission(vehicle):
+def PX4setMode(vehicle, mavMode):
+    vehicle._master.mav.command_long_send(vehicle._master.target_system, vehicle._master.target_component,
+                                               mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+                                               mavMode,
+                                               0, 0, 0, 0, 0, 0)
+
+def download_mission(cmds):
     """
     Download the current mission from the vehicle.
     """
-    cmds = vehicle.commands
     cmds.download()
     cmds.wait_ready() # wait until download is complete.
     return cmds

@@ -4,7 +4,7 @@ import exceptions
 import time
 import cv2
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode
 from pymavlink import mavutil
 
 # Try to connect to PX4
@@ -45,16 +45,15 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-print 'Check the status, press \'g\' to continue, \'q\' to quit'
-char = cv2.waitKey()
-if char & 0xFF == ord('q'):
-    return 0
-elif char & 0xFF == ord('g'):
+char = raw_input("Check the status, press anykey to continue, \'q\' to quit")
+if char == 'q':
+    raise Exception('Mission cancelled!')
+else:
     print 'Mission start.'
 
 if vehicle:
     # old mission
-    cmds = download_mission(vehicle)
+    cmds = download_mission(vehicle.commands)
     print ('Waypoint numbers: ', cmds.count)
     missionlist=[]
     for cmd in cmds:
@@ -65,11 +64,11 @@ if vehicle:
     # modify mission
     cmd = missionlist[1]
     startlocation=LocationGlobal(cmd.x, cmd.y,cmd.z)
-    adds_square_mission(vehicle, startlocation, 50)
+    adds_square_mission(vehicle, startlocation, 20)
     time.sleep(3)
 
     # new mission
-    cmds = download_mission(vehicle)
+    cmds = download_mission(vehicle.commands)
     print ('Waypoint numbers: ', cmds.count)
     missionlist=[]
     for cmd in cmds:
@@ -78,15 +77,10 @@ if vehicle:
 
 #    arm_and_takeoff(vehicle, 5)
     time.sleep(10)
-    vehicle.mode = VehicleMode('GUIDED')
+    #vehicle.mode = VehicleMode('GUIDED')
+    #PX4setMode(vehicle, 4)
+
     '''
-    print 'Create a new mission (for current location)'
-    adds_square_mission(vehicle.location.global_frame,50)
-
-
-    # From Copter 3.3 you will be able to take off using a mission item. Plane must take off using a mission item (currently).
-    arm_and_takeoff(5)
-
     print "Starting mission"
     # Reset mission set to first (0) waypoint
     vehicle.commands.next=0
