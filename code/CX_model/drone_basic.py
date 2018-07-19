@@ -45,9 +45,9 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
             return "Initialisation failed! Mission cancelled."
 
     # Arming motors after checking the mode is set up properly:
-    vehicle.mode = VehicleMode("OFFBOARD")
+    vehicle.mode = VehicleMode("POSCTL")
     time.sleep(5)
-    if not vehicle.mode == VehicleMode("OFFBOARD"):
+    if not vehicle.mode == VehicleMode("POSCTL"):
         
         print "Mode setup failed! Takeoff cancelled."
         return "Mode setup failed! Takeoff cancelled."
@@ -71,7 +71,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
-        if vehicle.mode == VehicleMode("OFFBOARD"):
+        if vehicle.mode == VehicleMode("POSCTL"):
             print " Altitude: ", vehicle.location.global_relative_frame.alt
             #Break and return from function just below target altitude.
             if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
@@ -101,9 +101,9 @@ def arm(vehicle):
             return "Initialisation failed! Mission cancelled."
 
     # Arming motors after checking the mode is set up properly:
-    vehicle.mode = VehicleMode("OFFBOARD")
+    vehicle.mode = VehicleMode("POSCTL")
     time.sleep(5)
-    if not vehicle.mode == VehicleMode("OFFBOARD"):
+    if not vehicle.mode == VehicleMode("POSCTL"):
         print "Mode setup failed! Takeoff cancelled."
         return "Mode setup failed! Takeoff cancelled."
     else:
@@ -174,7 +174,7 @@ def goto(vehicle, dNorth, dEast, gotoFunction):
     targetDistance=get_distance_metres(currentLocation, targetLocation)
     gotoFunction(targetLocation)
 
-    while vehicle.mode.name=="OFFBOARD": #Stop action if we are no longer in offboard mode.
+    while vehicle.mode.name=="POSCTL": #Stop action if we are no longer in postiion mode.
         remainingDistance=get_distance_metres(vehicle.location.global_frame, targetLocation)
         print "Distance to target: ", remainingDistance
         if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
