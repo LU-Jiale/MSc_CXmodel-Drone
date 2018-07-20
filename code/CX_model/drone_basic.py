@@ -66,7 +66,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
             return "Arm motors failed! Mission cancelled."
 
     # Taking off
-    #vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
@@ -90,13 +90,14 @@ def arm(vehicle):
     """
 
     # Basic pre-arm checks
-    if not vehicle.is_armable:
+    if vehicle.gps_0.fix_type < 3:
         for i in range(4):
             print " Waiting for vehicle to initialise..."
-    	    if vehicle.is_armable:
+    	    if vehicle.gps_0.fix_type ==3:
+                print "Pass GPS check."
                 break
             time.sleep(5)
-        if not vehicle.is_armable:
+        if vehicle.gps_0.fix_type < 3:
             print "Initialisation failed! Mission cancelled."
             return "Initialisation failed! Mission cancelled."
 
@@ -115,7 +116,8 @@ def arm(vehicle):
             print " Waiting for vehicle to arm..."
     	    if vehicle.armed:
                 break
-            time.sleep(5)
+            vehicle.armed = True
+            time.sleep(2)
         if not vehicle.armed:
             print "Arm motors failed! Mission cancelled."
             return "Arm motors failed! Mission cancelled."

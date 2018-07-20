@@ -30,7 +30,7 @@ tb1_optical = np.zeros(central_complex.N_TB1)
 memory_optical = 0.5 * np.ones(central_complex.N_CPU4)
 
 cx_gps = cx_rate.CXRate(noise = 0)
-tb1_gps = np.zeros(central_complex.N_TB1)
+MAV_CMD_NAV_LANDtb1_gps = np.zeros(central_complex.N_TB1)
 memory_gps = 0.5 * np.ones(central_complex.N_CPU4)
 cpu4_gps = np.zeros(16)
 
@@ -72,13 +72,13 @@ except:
 #state = arm(drone)
 #logging.info(state)
 
-while drone.mode.name != "MISSION":
+while drone.mode.name != "ALTCTL":
     print "Waiting for the mission mode."
     time.sleep(2)
 
 start_time = time.time()
-
-while drone.mode.name == "MISSION":
+print "Start to update CX model, switch mode to end"
+while drone.mode.name == "ALTCTL":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
@@ -121,16 +121,12 @@ while drone.mode.name == "MISSION":
                  (angle_gps/np.pi)*180, distance_gps, elapsed_time))
 
     prvs = next
-    print('Elapsed time:%.5f'%elapsed_time)
+#    print('Elapsed time:%.5f'%elapsed_time)
 
-print((angle/np.pi) * 180, distance)
+print "Mission ended or stoppped. The final results of CX model based on optcial flow is:"
+print((angle_optical/np.pi) * 180, distance_optical)
 drone.close()
 if RECORDING == 'true':
     out.release()
 cap.release()
 cv2.destroyAllWindows()
-
-
-
-
-

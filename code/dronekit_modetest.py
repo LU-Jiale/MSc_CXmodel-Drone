@@ -33,9 +33,9 @@ print " Global Location (relative altitude): %s" % vehicle.location.global_relat
 print " Local Location: %s" % vehicle.location.local_frame
 print " Attitude: %s" % vehicle.attitude
 print " Velocity: %s" % vehicle.velocity
-print " GPS: %s" % vehicle.gps_0
+print " GPS: %s" % vehicle.gps_0.fix_type
 print " Battery: %s" % vehicle.battery
-print " EKF OK?: %s" % vehicle.ekf_ok
+print " EKF OK?: %s" % vehicle._ekf_predposhorizabs
 print " Last Heartbeat: %s" % vehicle.last_heartbeat
 print " Heading: %s" % vehicle.heading
 print " Is Armable?: %s" % vehicle.is_armable
@@ -45,20 +45,18 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-while not vehicle.ekf_ok:
-    print "EFK is not intialised properly"
-    time.sleep(2)
-
-
 if vehicle:
-    vehicle.mode = VehicleMode("POSCTL")
-    print vehicle.mode.name
+    vehicle.mode = VehicleMode("ALTCTL")
     time.sleep(2)
+    print vehicle.mode.name
+    '''
     vehicle.mode = VehicleMode("MISSION")
-    print vehicle.mode.name
     time.sleep(2)
-    arm(vehicle)
-    vehicle.mode = VehicleMode("OFFBOARD")
     print vehicle.mode.name
-    vehicle.armed = false
+    vehicle.armed = True
+    vehicle.mode = VehicleMode("MISSION")
+    time.sleep(1)
+    print vehicle.mode.name
+    vehicle.armed = False
+    '''
     vehicle.close()

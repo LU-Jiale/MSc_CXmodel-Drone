@@ -47,15 +47,6 @@ else:
 
 vehicle.mode = VehicleMode("MISSION")
 if vehicle:
-    #Callback to print the location in global frames. 'value' is the updated value
-    def location_callback(self, attr_name, value):
-        print ("Location (Global): ", value)
-
-
-    # Add a callback `location_callback` for the `global_frame` attribute.
-    vehicle.add_attribute_listener('location.global_frame', location_callback)
-
-    
 
     # Load commands
     cmds = vehicle.commands
@@ -91,7 +82,7 @@ if vehicle:
     cmds.upload()
     time.sleep(2)
 
-    vehicle.armed = True
+    arm(vehicle)
     # monitor mission execution
     nextwaypoint = vehicle.commands.next
     while nextwaypoint < len(vehicle.commands):
