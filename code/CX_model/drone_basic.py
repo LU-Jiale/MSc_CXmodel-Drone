@@ -28,62 +28,6 @@ def download_mission(cmds):
     return cmds
 
 
-def arm_and_takeoff(vehicle, aTargetAltitude):
-    """
-    Arms vehicle and fly to aTargetAltitude.
-    """
-
-    # Basic pre-arm checks
-    if not vehicle.is_armable:
-        for i in range(4):
-            print " Waiting for vehicle to initialise..."
-    	    if vehicle.is_armable:
-                break
-            time.sleep(5)    
-        if not vehicle.is_armable:
-            print "Initialisation failed! Mission cancelled."
-            return "Initialisation failed! Mission cancelled."
-
-    # Arming motors after checking the mode is set up properly:
-    vehicle.mode = VehicleMode("POSCTL")
-    time.sleep(5)
-    if not vehicle.mode == VehicleMode("POSCTL"):
-        
-        print "Mode setup failed! Takeoff cancelled."
-        return "Mode setup failed! Takeoff cancelled."
-    else:
-        vehicle.armed = True
-
-    # Confirm vehicle armed before attempting to take off   
-    if not vehicle.armed:
-        for i in range(4):
-            print " Waiting for vehicle to arm..."
-    	    if vehicle.armed:
-                break
-            time.sleep(5)    
-        if not vehicle.armed:
-            print "Arm motors failed! Mission cancelled."
-            return "Arm motors failed! Mission cancelled."
-
-    # Taking off
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
-
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
-    #  after Vehicle.simple_takeoff will execute immediately).
-    while True:
-        if vehicle.mode == VehicleMode("POSCTL"):
-            print " Altitude: ", vehicle.location.global_relative_frame.alt
-            #Break and return from function just below target altitude.
-            if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
-                print "Reached target altitude"
-                break
-            time.sleep(1)
-        else:
-            print 'Interrupt from controller, Mission cancelled.'
-            return 'Interrupt from controller, Mission cancelled.'
-    return "Take off finished"
-
-
 def arm(vehicle):
     """
     Arms vehicle 
@@ -96,7 +40,7 @@ def arm(vehicle):
     	    if vehicle.gps_0.fix_type ==3:
                 print "Pass GPS check."
                 break
-            time.sleep(5)
+            time.sleep(2)
         if vehicle.gps_0.fix_type < 3:
             print "Initialisation failed! Mission cancelled."
             return "Initialisation failed! Mission cancelled."
@@ -123,6 +67,36 @@ def arm(vehicle):
             return "Arm motors failed! Mission cancelled."
 
     return "Armed successfully"
+
+
+def arm_and_takeoff(vehicle, aTargetAltitude):
+    """
+    Arms vehicle and fly to aTargetAltitude.
+    """
+
+    # Arm motors
+    state = arm(vehicle)
+    if state != "Armed successfully"
+        return "Arm motor failed, mission cancelled."
+
+    # Taking off
+    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+
+    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
+    #  after Vehicle.simple_takeoff will execute immediately).
+    while True:
+        if vehicle.mode == VehicleMode("POSCTL"):
+            print " Altitude: ", vehicle.location.global_relative_frame.alt
+            #Break and return from function just below target altitude.
+            if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
+                print "Reached target altitude"
+                break
+            time.sleep(1)
+        else:
+            print 'Interrupt from controller, Mission cancelled.'
+            return 'Interrupt from controller, Mission cancelled.'
+    return "Take off finished"
+
 
 
 def condition_yaw(vehicle, heading, relative=False):
@@ -352,6 +326,55 @@ def adds_square_mission(vehicle, aLocation, aSize):
     #add dummy waypoint "5" at point 4 (lets us know when have reached destination)
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
              mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 10))    
+
+    print " Upload new commands to vehicle"
+    cmds.upload()
+
+
+def adds_Lshape_mission(vehicle, aSize, alt):
+    """
+    Adds a takeoff command and two waypoint commands to the current mission. 
+    The waypoints are positioned to form a L-shape route (each line with aSize length) starting form
+    the current location.
+
+    The function assumes vehicle.commands matches the vehicle mission state 
+    (you must have called download at least once in the session and after clearing the mission)
+    """	
+
+    cmds = vehicle.commands
+
+    print " Clear any existing commands"
+    cmds.clear() 
+    
+    print " Define/add new commands."
+
+    home = vehicle.location.global_relative_frame
+    # Add new commands. The meaning/order of the parameters is documented in the Command class.      
+    #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 1, 0, 0, 0, 0, home.lat, home.lon, home.alt+10)
+    cmds.add(cmd)
+
+    # goto the starting point
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, home.lat, home.lon, home.alt+10)
+    cmds.add(cmd)
+
+    # move 10 meters south
+    wp = get_location_metres(wp, -10, 0);
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+    cmds.add(cmd)
+
+    # move 10 meters west
+    wp = get_location_meters(wp, 0, -10);
+    cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+    cmds.add(cmd)
+
+    # Upload mission
+    cmds.upload()
+    time.sleep(2)
 
     print " Upload new commands to vehicle"
     cmds.upload()
