@@ -36,7 +36,7 @@ print " Battery: %s" % vehicle.battery
 print " Heading: %s" % vehicle.heading
 print " System status: %s" % vehicle.system_status.state
 print " Groundspeed: %s" % vehicle.groundspeed    # settable
-print " Airspeed: %s" % vehicle.airspeed    # settable
+print " Airspeed: %s" % vehicle.airspeed    # settabledownload_mission(vehicle.commands)
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s\n\n" % vehicle.armed    # settable
 
@@ -56,10 +56,10 @@ while vehicle.mode.name != "MISSION"
 if vehicle:
 
     # Load commands
-    cmds = vehicle.commands
-    cmds.clear()
-
-    adds_Lshape_mission(vehicle, 20)
+    cmds = download_mission(vehicle.commands)
+    time.sleep(10)
+    startlocation=LocationGlobalRelative(cmd.x, cmd.y,cmd.z)
+    adds_Lshape_mission(vehicle, startlocation, 20, 5)
 
     arm(vehicle)
     # monitor mission execution
