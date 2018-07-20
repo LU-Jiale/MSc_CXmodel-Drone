@@ -4,7 +4,7 @@ import exceptions
 import time
 import cv2
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode, adds_Lshape_mission
 from pymavlink import mavutil
 
 # Try to connect to PX4
@@ -63,51 +63,13 @@ if vehicle:
     time.sleep(10)
     # modify mission
     cmd = missionlist[1]
-    startlocation=LocationGlobal(cmd.x, cmd.y,cmd.z)
-    adds_square_mission(vehicle, startlocation, 20)
+    startlocation=LocationGlobalRelative(cmd.x, cmd.y,cmd.z)
+    adds_Lshape_mission(vehicle, startlocation, 20, 5)
     time.sleep(3)
 
     # new mission
-    cmds = download_mission(vehicle.commands)
+#    cmds = download_mission(vehicle.commands)
     print ('Waypoint numbers: ', cmds.count)
-    missionlist=[]
     for cmd in cmds:
-        missionlist.append(cmd)
         print(cmd.x, cmd.y, cmd.z)
-
-#    arm_and_takeoff(vehicle, 5)
-    time.sleep(10)
-    #vehicle.mode = VehicleMode('GUIDED')
-    #PX4setMode(vehicle, 4)
-
-    '''
-    print "Starting mission"
-    # Reset mission set to first (0) waypoint
-    vehicle.commands.next=0
-
-    # Set mode to AUTO to start mission
-    vehicle.mode = VehicleMode("MISSION")
-
-
-    # Monitor mission. 
-    # Demonstrates getting and setting the command number 
-    # Uses distance_to_current_waypoint(), a convenience function for finding the 
-    #   distance to the next waypoint.
-
-    while vehicle.mode == VehicleMode('MISSION'):
-        nextwaypoint=vehicle.commands.next
-        print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
-  
-        if nextwaypoint==3: #Skip to next waypoint
-            print 'Skipping to Waypoint 5 when reach waypoint 3'
-            vehicle.commands.next = 5
-        if nextwaypoint==5: #Dummy waypoint - as soon as we reach waypoint 4 this is true and we exit.
-            print "Exit 'standard' mission when start heading to final waypoint (5)"
-            break;
-        time.sleep(1)
-
-    print 'Return to launch'
-    vehicle.mode = VehicleMode("RTL")
-    '''
-
-vehicle.close()
+    vehicle.close()

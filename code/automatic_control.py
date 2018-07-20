@@ -74,8 +74,10 @@ state = arm(drone)
 logging.info(state)
 
 # Upload mission
-#cmds = download_mission(drone.commands)
-adds_Lshape_mission(drone, 20, 5)
+cmd = download_mission(drone.commands)
+time.sleep(10)
+home = vehicle.location.global_relative_frame
+adds_Lshape_mission(drone, home, 20, 5)
 drone.mode = VehicleMode("MISSION")
 time.sleep(2)
 

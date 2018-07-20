@@ -76,7 +76,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
 
     # Arm motors
     state = arm(vehicle)
-    if state != "Armed successfully"
+    if state != "Armed successfully":
         return "Arm motor failed, mission cancelled."
 
     # Taking off
@@ -290,31 +290,29 @@ def goto_position_target_local_ned(vehicle, north, east, down):
 
 
 def adds_square_mission(vehicle, aLocation, aSize):
-    """
+    """ 
     Adds a takeoff command and four waypoint commands to the current mission. 
     The waypoints are positioned to form a square of side length 2*aSize around the specified LocationGlobal (aLocation).
 
     The function assumes vehicle.commands matches the vehicle mission state 
     (you must have called download at least once in the session and after clearing the mission)
-    """	
+    """
 
     cmds = vehicle.commands
 
     print " Clear any existing commands"
-    cmds.clear() 
-    
+    cmds.clear()
+
     print " Define/add new commands."
     # Add new commands. The meaning/order of the parameters is documented in the Command class. 
-     
-    #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
-    #cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-    #         mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, 0, 0, 10))
-
     #Define the four MAV_CMD_NAV_WAYPOINT locations and add the commands
     point1 = get_location_metres(aLocation, aSize, -aSize)
     point2 = get_location_metres(aLocation, aSize, aSize)
     point3 = get_location_metres(aLocation, -aSize, aSize)
     point4 = get_location_metres(aLocation, -aSize, -aSize)
+    #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
+    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
+             mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, point1.lat, point1.lon, 10))
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
              mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point1.lat, point1.lon, 10))
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
@@ -322,24 +320,21 @@ def adds_square_mission(vehicle, aLocation, aSize):
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
              mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point3.lat, point3.lon, 10))
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-             mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 10))
-    #add dummy waypoint "5" at point 4 (lets us know when have reached destination)
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-             mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 10))    
+             mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 5, 0, 0, 0, point4.lat, point4.lon, 10))
 
     print " Upload new commands to vehicle"
     cmds.upload()
 
 
-def adds_Lshape_mission(vehicle, aSize, alt):
-    """
+def adds_Lshape_mission(vehicle, home, aSize, alt):
+    """ 
     Adds a takeoff command and two waypoint commands to the current mission. 
     The waypoints are positioned to form a L-shape route (each line with aSize length) starting form
     the current location.
 
     The function assumes vehicle.commands matches the vehicle mission state 
     (you must have called download at least once in the session and after clearing the mission)
-    """	
+    """
 
     cmds = vehicle.commands
 
@@ -348,28 +343,27 @@ def adds_Lshape_mission(vehicle, aSize, alt):
     
     print " Define/add new commands."
 
-    home = vehicle.location.global_relative_frame
     # Add new commands. The meaning/order of the parameters is documented in the Command class.      
     #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
     cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-                  mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 1, 0, 0, 0, 0, home.lat, home.lon, home.alt+10)
+                  mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 1, 0, 0, 0, 0, home.lat, home.lon, alt)
     cmds.add(cmd)
 
     # goto the starting point
     cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, home.lat, home.lon, home.alt+10)
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 2, 0, 0, 0, 0, home.lat, home.lon, alt)
     cmds.add(cmd)
 
     # move 10 meters south
-    wp = get_location_metres(wp, -10, 0);
+    wp = get_location_metres(home, -aSize, 0);
     cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 2, 0, 0, 0, 0, wp.lat, wp.lon, alt)
     cmds.add(cmd)
 
     # move 10 meters west
-    wp = get_location_meters(wp, 0, -10);
+    wp = get_location_metres(wp, 0, -aSize);
     cmd = Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, 
-                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 1, 0, 0, 0, 0, wp.lat, wp.lon, wp.alt)
+                  mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 2, 0, 0, 0, 0, wp.lat, wp.lon, alt)
     cmds.add(cmd)
 
     # Upload mission
