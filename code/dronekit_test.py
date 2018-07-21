@@ -1,10 +1,11 @@
-import dronekit
-import socket
-import exceptions
-import time
-import cv2
-from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode, adds_Lshape_mission
+import numpy as np
+import dronekit 
+import socket 
+import exceptions 
+import time 
+import cv2 
+from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command 
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode, adds_Lshape_mission 
 from pymavlink import mavutil
 
 # Try to connect to PX4
@@ -37,7 +38,7 @@ print " GPS: %s" % vehicle.gps_0
 print " Battery: %s" % vehicle.battery
 print " EKF OK?: %s" % vehicle.ekf_ok
 print " Last Heartbeat: %s" % vehicle.last_heartbeat
-print " Heading: %s" % vehicle.heading
+print " Heading: %s, Heading in radiance: %s" % (vehicle.heading, vehicle.heading/180.0*np.pi)
 print " Is Armable?: %s" % vehicle.is_armable
 print " System status: %s" % vehicle.system_status.state
 print " Groundspeed: %s" % vehicle.groundspeed    # settable
@@ -55,10 +56,12 @@ if vehicle:
     # old mission
     cmds = download_mission(vehicle.commands)
     print ('Waypoint numbers: ', cmds.count)
+    print('Next ID:', cmds.next)
     missionlist=[]
     for cmd in cmds:
         missionlist.append(cmd)
         print(cmd.x, cmd.y, cmd.z)
+        print "Command ID: ", cmd.command
     
     time.sleep(10)
     # modify mission

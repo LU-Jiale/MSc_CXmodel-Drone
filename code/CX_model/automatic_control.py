@@ -8,7 +8,7 @@ import central_complex
 import dronekit
 from dronekit import VehicleMode
 from graphics import draw_flow, frame_preprocess
-from optical_flow import Optical_flow
+from optical_flow import Optical_flow, FRAME_DIM
 from central_complex import update_cells
 from drone_basic import arm, arm_and_takeoff
 
@@ -56,6 +56,7 @@ if not cap.isOpened():
 
 
 # intialise optical flow object
+optflow = Optical_flow();
 ret, frame1 = cap.read()
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = optflow.undistort(temp)
@@ -73,7 +74,6 @@ except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
 state = arm(drone)
-print(state)
 
 # set to mission mode.
 drone.mode = VehicleMode("MISSION")
@@ -87,6 +87,7 @@ while nextwaypoint <= 1:
     nextwaypoint = drone.commands.next
     time.sleep(1)
 
+nextwaypoint = drone.commands.next
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
 while drone.mode.name == "MISSION":
@@ -128,14 +129,13 @@ while drone.mode.name == "MISSION":
     angle_optical, distance_optical = cx_optical.decode_cpu4(cpu4_optical)
     angle_gps, distance_gps = cx_gps.decode_cpu4(cpu4_gps)
     logging.info('Angle_optical:{} Distance_optical:{} Angle_gps:{} Distance_gps:{} \
-                 elapsed_time:{}'.format((angle_optical/np.pi)*180, distance_optical, \
-                 (angle_gps/np.pi)*180, distance_gps, elapsed_time))
+                 elapsed_time:{}'.format((angle_optical/np.pi)*180.0, distance_optical, \
+                 (angle_gps/np.pi)*180.0, distance_gps, elapsed_time))
 
     # moniter the mission
-    if drone.commands.next > nextwaypoint:
-        display_seq = drone.commands.next+1
-        print "Moving to waypoint %s" % display_seq
-        nextwaypoint = drone.commands.next
+    display_seq = drone.commands.next+1
+    print "Moving to waypoint %s" % display_seq
+    nextwaypoint = drone.commands.next
 
     prvs = next
 #    print('Elapsed time:%.5f'%elapsed_time)
