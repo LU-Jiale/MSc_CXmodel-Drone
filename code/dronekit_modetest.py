@@ -4,7 +4,8 @@ import exceptions
 import time
 import cv2
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode
+from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, \
+     PX4setMode, goto_position_target_local_ned
 from pymavlink import mavutil
 
 # Try to connect to PX4
@@ -45,18 +46,17 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-if vehicle:
-    vehicle.mode = VehicleMode("ALTCTL")
-    time.sleep(2)
-    print vehicle.mode.name
-    '''
-    vehicle.mode = VehicleMode("MISSION")
-    time.sleep(2)
-    print vehicle.mode.name
-    vehicle.armed = True
-    vehicle.mode = VehicleMode("MISSION")
-    time.sleep(1)
-    print vehicle.mode.name
-    vehicle.armed = False
-    '''
-    vehicle.close()
+if not vehicle:
+    raise Exception("Fail to connect PX4")
+
+goto_position_target_local_ned(vehicle, 0, 0, 10)
+time.sleep(1)
+vehicle.mode = VehicleMode("OFFBOARD")
+time.sleep(0.1)
+print vehicle.mode.name
+
+while True:
+    goto_position_target_local_ned(vehicle, 0, 0, 10)
+    time.sleep(0.1)
+
+vehicle.close()

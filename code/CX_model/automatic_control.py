@@ -1,3 +1,5 @@
+
+
 import numpy as np
 import sys, os, time
 import logging, datetime
@@ -30,7 +32,7 @@ tb1_optical = np.zeros(central_complex.N_TB1)
 memory_optical = 0.5 * np.ones(central_complex.N_CPU4)
 
 cx_gps = cx_rate.CXRate(noise = 0)
-MAV_CMD_NAV_LANDtb1_gps = np.zeros(central_complex.N_TB1)
+tb1_gps = np.zeros(central_complex.N_TB1)
 memory_gps = 0.5 * np.ones(central_complex.N_CPU4)
 cpu4_gps = np.zeros(16)
 
@@ -72,13 +74,14 @@ except:
 #state = arm(drone)
 #logging.info(state)
 
-while drone.mode.name != "ALTCTL":
-    print "Waiting for the mission mode."
-    time.sleep(2)
+#while drone.mode.name != "MISSION":
+#    print "Waiting for the mission mode."
+#    time.sleep(2)
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "ALTCTL":
+#while drone.mode.name == "MISSION":
+while True:
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
