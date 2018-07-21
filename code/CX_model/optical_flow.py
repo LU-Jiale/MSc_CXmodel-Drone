@@ -18,67 +18,86 @@ scaled_K = K * FRAME_DIM[0] / DIM[0]  # The values of K is to scale with image d
 scaled_K[2][2] = 1.0  # Except that K[2][2] is always 1.0
 # This is how scaled_K, dim2 and balance are used to determine the final K used to un-distort image. 
 new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(scaled_K, D, FRAME_DIM, np.eye(3), balance=1.0)
-map1, map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, FRAME_DIM, cv2.CV_16SC2)
+_map1, _map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, FRAME_DIM, cv2.CV_16SC2)
 
 
-def undistort(img):
-    ''' undistort and crop frames from the fisheye image 
-    '''
-    dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
-    assert dim1[0]/dim1[1] == DIM[0]/DIM[1], "Image to undistort needs to have same aspect ratio as the ones used in calibration"
-    undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    # crop images 
-    return undistorted_img[21:118, 18:-1] #[70:200,18:-1]
+class Optical_flow():
 
-def get_filter(fh, fw):
-    ''' Generate match filter for optical flow computation, one for left 45 degree 
-        one for right 45 degree 
-    '''
-    # filter for speed retrieval
-    vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
-    horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
-    D = np.ones([fh,fw,3])*-1
-    D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
-    D[:,:,1] = np.tan(horizontal_views)
-    sin_theta = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
-    mag_temp = LA.norm(D, axis = 2) + 0.0000001
-    D /= mag_temp.reshape(fh,fw,1)
-    a_l = a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
-    a_r = a = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
-    left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
-    right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
-    return left_filter, right_filter
+    def __init__(self):
+        self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
+        self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
+        self.map1 = _map1
+        self.map2 = _map2
+        self.accmax = 0.2
+
+    def undistort(self, img):
+        ''' undistort and crop frames from the fisheye image 
+        '''
+        dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
+        assert dim1[0]/dim1[1] == DIM[0]/DIM[1], \
+               "Image to undistort needs to have same aspect ratio as the ones used in calibration"
+        undistorted_img = cv2.remap(img, self.map1, self.map2, interpolation= \
+                                    cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        # crop images 
+        return undistorted_img[21:118, 18:-1] #[70:200,18:-1]
+
+    def get_filter(self, fh, fw):
+        ''' Generate match filter for optical flow computation, one for left 45 degree 
+            one for right 45 degree 
+        '''
+        # filter for speed retrieval
+        vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
+        horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
+        D = np.ones([fh,fw,3])*-1
+        D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
+        D[:,:,1] = np.tan(horizontal_views)
+        sin_theta = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
+        mag_temp = LA.norm(D, axis = 2) + 0.0000001
+        D /= mag_temp.reshape(fh,fw,1)
+        a_l = a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
+        a_r = a = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
+        left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
+        right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
+        return left_filter, right_filter
 
 
-def cart2pol(x, y):
-    rho = np.sqrt(x**2 + y**2)
-    phi = np.arctan2(y, x)
-    return(rho, phi)
+    def cart2pol(self, x, y):
+        rho = np.sqrt(x**2 + y**2)
+        phi = np.arctan2(y, x)
+        return(rho, phi)
 
 
-def pol2cart(rho, phi):
-    x = rho * np.cos(phi)
-    y = rho * np.sin(phi)
-    return(x, y)
+    def pol2cart(self, rho, phi):
+        x = rho * np.cos(phi)
+        y = rho * np.sin(phi)
+        return(x, y)
 
 
-def get_speed(flow, left_filter, right_filter, elapsed_time):
-    ''' calculate speeds from optical flow using match filters
-    '''    
-    mag = LA.norm(flow/left_filter, axis=2)
+    def get_speed(self, flow, left_filter, right_filter, elapsed_time):
+        ''' calculate speeds from optical flow using match filters
+        '''    
+        mag = LA.norm(flow/left_filter, axis=2)
     
-    mag[mag < 2.0] = 0  # filter out those noisy flow
-    mag[mag > 0.0] = 1.0
-    count = np.sum(mag)
-
-    (rho, phi) = cart2pol(flow[:,:,0], flow[:,:,1])
-    mean = np.mean(phi)
-    phi_diff = phi-mean
-    phi_diff[np.abs(phi_diff)>np.pi/2] = np.pi/2
-    #print count
-    weight = mag/(elapsed_time*count*50+1) * np.cos(phi_diff)
-    weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
-    sl = np.sum(flow * left_filter * weight)
-    sr = np.sum(flow * right_filter * weight)
-    return sl, sr
-
+        mag[mag < 0.5] = 0  # filter out those noisy flow
+        mag[mag > 0.0] = 1.0
+        count = np.sum(mag)
+    
+        (rho, phi) = self.cart2pol(flow[:,:,0], flow[:,:,1])
+        mean = np.mean(phi)
+        phi_diff = phi-mean
+        phi_diff[np.abs(phi_diff)>np.pi/2] = np.pi/2
+        #print count
+        weight = mag/(elapsed_time*count*10+1) #* np.cos(phi_diff)
+        weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
+        self.speed_left_buffer = np.roll(self.speed_left_buffer, 1)
+        self.speed_left_buffer[0] = np.sum(flow * left_filter * weight)
+        self.speed_right_buffer = np.roll(self.speed_right_buffer, 1)
+        self.speed_right_buffer[0] = np.sum(flow * right_filter * weight)
+        sl = np.mean(self.speed_left_buffer)
+        sl = np.max([np.min([self.speed_left_buffer[1]+self.accmax, sl]), self.speed_left_buffer[1]-self.accmax])
+        sr = np.mean(self.speed_right_buffer)
+        sr = np.max([np.min([self.speed_right_buffer[1]+self.accmax, sr]), self.speed_right_buffer[1]-self.accmax])
+        self.speed_left_buffer[0] = sl
+        self.speed_right_buffer[0] = sr
+        return sl, sr
+    

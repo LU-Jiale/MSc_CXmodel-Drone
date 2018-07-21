@@ -3,7 +3,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-error_log_path = 'CX_model/log/2018-07-19_07-47-37.log'
+error_log_path = 'CX_model/log/2018-07-21_09-52-02.log'
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')
@@ -25,7 +25,8 @@ speed_right_real = []
 
 heading_list = []
 
-velocity_list = []
+velocity_x_list = []
+velocity_y_list = []
 alt_list = []
 lat_list = []
 lon_list = []
@@ -45,8 +46,9 @@ for i in range(len(navigation_info)):
 
     velocity = navigation_info[i].split('[')[1].split(']')[0].split(', ')
     velocity = [float(j) for j in velocity]
-    velocity_list.append((velocity))
-    
+    velocity_x_list.append((velocity[0]))
+    velocity_y_list.append((velocity[1]))
+
     left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi-np.pi/4-np.pi/2))
     speed_left_real.append(left_real/10.0)
@@ -66,19 +68,19 @@ for i in range(len(navigation_info)):
     distance = model_info[i].split('Distance_optical:')[1].split(' ')[0]
     distance_list.append(float(distance)/100)
     
-    distance = model_info[i].split('Distance_optical:')[-1].split(' ')[0]
+    distance = model_info[i].split('Distance_gps:')[-1].split(' ')[0]
     distance_list2.append(float(distance)/100)
 
     angle = model_info[i].split('Angle_optical:')[1].split(' ')[0]
     angle_list1.append(float(angle))
-    angle = model_info[i].split('Angle_optical:')[-1].split(' ')[0]
-    angle_list2.append(float(angle)/np.pi*180)
+    angle = model_info[i].split('Angle_gps:')[-1].split(' ')[0]
+    angle_list2.append(float(angle))
 
 print("Data number:", len(heading_list))
 
 
 
-fig, (ax1, ax2, ax3) = plt.subplots(3, sharey=True)
+fig1, (ax1, ax2, ax3) = plt.subplots(3, sharey=False)
 ax1.set(title='speed', ylabel='left')
 ax2.set(xlabel='', ylabel='right')
 ax2.set(xlabel='time (s)', ylabel='Distance')
@@ -88,12 +90,16 @@ ax1.plot(x_axis, speed_left, 'r-')
 ax1.plot(x_axis, speed_left_real, 'b-')
 ax2.plot(x_axis, speed_right, 'r-')
 ax2.plot(x_axis, speed_right_real, 'b-')
-ax3.plot(x_axis, distance_list, 'r-')
-ax3.plot(x_axis, distance_list2, 'b-')
+ax3.plot(x_axis, speed_left_real, 'r-')
+ax3.plot(x_axis, speed_right_real, 'b-')
 
-fig2, (ax4, ax5) = plt.subplots(2, sharey=True)
+fig2, (ax4, ax5, ax6) = plt.subplots(3, sharey=False)
 ax4.plot(x_axis, angle_list1, 'r-')
 ax4.plot(x_axis, angle_list2, 'b-')
 ax5.plot(x_axis, heading_list, 'r-')
-plt.draw()
+ax6.plot(x_axis, distance_list, 'r-')
+ax6.plot(x_axis, distance_list2, 'b-')
+
+
 plt.show()
+

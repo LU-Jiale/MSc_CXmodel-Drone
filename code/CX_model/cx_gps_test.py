@@ -55,6 +55,7 @@ while drone.mode.name != "RTL":
                  elapsed_time:{}'.format(0, 0, (angle_gps/np.pi)*180, distance_gps, elapsed_time))
 
     prvs = next
+    time.sleep(0.02)
 #    print('Elapsed time:%.5f'%elapsed_time)
 
 print "Mission ended or stoppped. The final results of CX model based on optcial flow is:"

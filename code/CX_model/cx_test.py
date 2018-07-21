@@ -107,13 +107,13 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 T = 200
 velocity = np.ones([T,2], dtype=float)
 headings = np.zeros(T, dtype=float)
-headings[(T/5):-1] = -np.pi/2
-headings[-1]=0
-for t in range(len(speed_left)):
+headings[:] = -np.pi/2
+
+for t in range(T): #len(speed_left)):
         speed = np.array([speed_left_real[t], speed_right_real[t]])
         
         tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
-            heading=heading_list[t], velocity=speed, tb1=tb1, memory=memory, cx=cx)
+            heading=headings[t], velocity=velocity[t], tb1=tb1, memory=memory, cx=cx)
 
         angle, distance = cx.decode_cpu4(cpu4)
         angle_degree = angle/np.pi * 180

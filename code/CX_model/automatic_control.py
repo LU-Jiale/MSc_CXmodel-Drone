@@ -8,6 +8,7 @@ import cv2
 import cx_rate, cx_basic
 import central_complex
 import dronekit
+from dronekit import VehicleMode
 from graphics import draw_flow, frame_preprocess
 from optical_flow import undistort, get_filter, get_speed, FRAME_DIM
 from central_complex import update_cells
@@ -71,17 +72,18 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-#state = arm(drone)
-#logging.info(state)
+state = arm(drone)
+print(state)
 
-#while drone.mode.name != "MISSION":
-#    print "Waiting for the mission mode."
-#    time.sleep(2)
+# set to mission mode.
+drone.mode = VehicleMode("MISSION")
+while drone.mode.name != "MISSION":
+    print "Waiting for the mission mode."
+    time.sleep(2)
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-#while drone.mode.name == "MISSION":
-while True:
+while drone.mode.name == "MISSION":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
