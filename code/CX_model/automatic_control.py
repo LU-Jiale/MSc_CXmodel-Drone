@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import sys, os, time
 import logging, datetime
@@ -10,7 +8,7 @@ import central_complex
 import dronekit
 from dronekit import VehicleMode
 from graphics import draw_flow, frame_preprocess
-from optical_flow import undistort, get_filter, get_speed, FRAME_DIM
+from optical_flow import Optical_flow
 from central_complex import update_cells
 from drone_basic import arm, arm_and_takeoff
 
@@ -46,6 +44,7 @@ cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
+
 # Define the codec and create VideoWriter object
 if RECORDING == 'true':
     fname = 'video/' + time_string + '.avi'
@@ -55,13 +54,14 @@ if not cap.isOpened():
     logging.info('Camera not connected!')
     raise Exception('Camera not connected!')
 
-# initialize optical flow
+
+# intialise optical flow object
 ret, frame1 = cap.read()
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = undistort(temp)
+prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
-left_filter, right_filter = get_filter(fh, fw)
+left_filter, right_filter = optflow.get_filter(fh, fw)
 
 # connect to PX4 and arm
 try:
@@ -80,6 +80,12 @@ drone.mode = VehicleMode("MISSION")
 while drone.mode.name != "MISSION":
     print "Waiting for the mission mode."
     time.sleep(2)
+# wait until reach first waypoint
+nextwaypoint = drone.commands.next
+while nextwaypoint <= 1:
+    print "Moving to waypoint %s" % drone.commands.next+1
+    nextwaypoint = drone.commands.next
+    time.sleep(1)
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
@@ -88,15 +94,15 @@ while drone.mode.name == "MISSION":
     ret, frame2 = cap.read()
     frame_num += 1
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = undistort(frame_gray)
+    next = optflow.undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     # speed
     elapsed_time = time.time() - start_time
     start_time = time.time()
-    sl, sr = get_speed(flow, left_filter, right_filter, elapsed_time)
+    sl, sr = optflow.get_speed(flow, left_filter, right_filter, elapsed_time)
 
     # update CX neurons
-    drone_heading = drone.heading/180*np.pi
+    drone_heading = drone.heading/180.0*np.pi
     velocity = np.array([sl, sr])
     __, __, tb1_optical, __, __, memory_optical, cpu4_optical, __, motor_optical = \
             update_cells(heading=drone_heading, velocity=velocity, tb1=tb1_optical, \
@@ -124,6 +130,12 @@ while drone.mode.name == "MISSION":
     logging.info('Angle_optical:{} Distance_optical:{} Angle_gps:{} Distance_gps:{} \
                  elapsed_time:{}'.format((angle_optical/np.pi)*180, distance_optical, \
                  (angle_gps/np.pi)*180, distance_gps, elapsed_time))
+
+    # moniter the mission
+    if drone.commands.next > nextwaypoint:
+        display_seq = drone.commands.next+1
+        print "Moving to waypoint %s" % display_seq
+        nextwaypoint = drone.commands.next
 
     prvs = next
 #    print('Elapsed time:%.5f'%elapsed_time)
