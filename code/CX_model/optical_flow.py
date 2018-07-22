@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 from numpy import linalg as LA
-FRAME_DIM = ['small':(216, 162), 'medium':(324, 243), 
-             'large':(648, 486), 'origin':(1296, 972)]
+FRAME_DIM = {'small':(216, 162), 'medium':(324, 243), \
+             'large':(648, 486), 'origin':(1296, 972)}
 #K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
 #           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
 #D=np.array([[-0.8909302058344544], [3.1817023042732813], 
@@ -21,7 +21,7 @@ DIM=(1296, 972)
 
 class Optical_flow():
 
-    def __init__(self, dim = FRAME_DIM[0]):
+    def __init__(self, dim):
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.accmax = 0.2 * (dim[0]/216.0)*5

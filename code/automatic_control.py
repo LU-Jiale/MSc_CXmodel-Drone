@@ -4,17 +4,14 @@ import logging, datetime
 import dronekit
 import argparse
 import cv2
-import CX_model.cx_rate
-import CX_model.cx_basic
-import CX_model.central_complex
+from CX_model import cx_rate, central_complex
 from dronekit import VehicleMode
-from CX_model.graphics import draw_flow, frame_preprocess
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
 
-resolution = FRAME_DIM['small']
-
+resolution = FRAME_DIM['medium']
+print "Resolution: ", resolution
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
 parser.add_argument('--recording', default = 'no', 
@@ -49,12 +46,12 @@ fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 
 # intialise optical flow object
-optflow = Optical_flow();
+optflow = Optical_flow(resolution);
 ret, frame1 = cap.read()
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = optflow.undistort2(temp)
+prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
-print("Frame size: {0}*{1}".format(fw,fh))
+print("Undistorted frame size: {0}*{1}".format(fw,fh))
 left_filter, right_filter = optflow.get_filter(fh, fw)
 
 # Define the codec and create VideoWriter object
@@ -67,7 +64,7 @@ if not cap.isOpened():
     raise Exception('Camera not connected!')
 
 # connect to PX4 and arm
-Xtry:
+try:
     drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
 except dronekit.APIException:
     logging.critical('Timeout! Fail to connect PX4')
@@ -99,7 +96,7 @@ for i in range(100):
     ret, frame2 = cap.read()
     frame_num += 1
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = optflow.undistort2(frame_gray)
+    next = optflow.undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     # speed
     elapsed_time = time.time() - start_time

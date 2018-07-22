@@ -5,8 +5,8 @@ import cv2
 import os
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 
-fw = FRAME_DIM['medium'][0]/2
-fh = FRAME_DIM['medium'][1]/2
+fw = FRAME_DIM['large'][0]
+fh = FRAME_DIM['large'][1]
 scale = 324.0/fw
 
 cap = cv2.VideoCapture(0)
