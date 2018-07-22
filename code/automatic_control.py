@@ -1,16 +1,19 @@
 import numpy as np
 import sys, os, time
 import logging, datetime
+import dronekit
 import argparse
 import cv2
-import cx_rate, cx_basic
-import central_complex
-import dronekit
+import CX_model.cx_rate
+import CX_model.cx_basic
+import CX_model.central_complex
 from dronekit import VehicleMode
-from graphics import draw_flow, frame_preprocess
-from optical_flow import Optical_flow
-from central_complex import update_cells
-from drone_basic import arm, arm_and_takeoff
+from CX_model.graphics import draw_flow, frame_preprocess
+from CX_model.optical_flow import Optical_flow, FRAME_DIM
+from CX_model.central_complex import update_cells
+from CX_model.drone_basic import arm, arm_and_takeoff
+
+resolution = FRAME_DIM['small']
 
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
@@ -38,8 +41,8 @@ cpu4_gps = np.zeros(16)
 # initialize camera and optical flow
 frame_num = 0
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,FRAME_SMALL[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,FRAME_SMALL[1])
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
 cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
