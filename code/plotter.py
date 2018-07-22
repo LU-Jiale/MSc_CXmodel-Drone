@@ -3,7 +3,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-error_log_path = 'CX_model/log/2018-07-22_08-31-38.log'
+error_log_path = 'CX_model/log/2018-07-21_09-52-02.log'
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')

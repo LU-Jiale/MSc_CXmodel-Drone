@@ -23,31 +23,37 @@ for i in range(1):
     ret, frame1 = cap.read()      # Skip frames
     frame_num += 1
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+dim = temp.shape[::-1]
 
 # intialise optical flow object
-optflow = Optical_flow();
+optflow = Optical_flow(dim);
 prvs = optflow.undistort(temp)
-prvs = frame_preprocess(prvs, scale=1.0, crop_size = [0.0, 0.0])
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
 
 # log information
 str = sys.argv[1]
-error_log_path = 'log/'+str.split('.')[0].split('/')[1]+'.log'
-with open(error_log_path) as f:
-    data = f.read()
-data = data.split('\n')
-navigation_info = []
-model_info = []
-for i in range(len(data)/2):
-    navigation_info.append(data[2*i])
-    model_info.append(data[2*i+1])
-time_list = []
-for i in range(len(model_info)):
-    elapsed_time = model_info[i].split('elapsed_time:')[-1]
-    time_list.append(float(elapsed_time))
-angle_list = np.zeros(len(model_info), dtype=float)
-distance_list = np.zeros(len(model_info), dtype=float)
+try:
+    error_log_path = 'log/'+str.split('.')[0].split('/')[1]+'.log'
+    with open(error_log_path) as f:
+        data = f.read()
+    data = data.split('\n')
+    navigation_info = []
+    model_info = []
+    for i in range(len(data)/2):
+        navigation_info.append(data[2*i])
+        model_info.append(data[2*i+1])
+    time_list = []
+    for i in range(len(model_info)):
+        elapsed_time = model_info[i].split('elapsed_time:')[-1]
+        time_list.append(float(elapsed_time))
+    data_length = len(model_info)
+except:
+    data_length = 200
+    time_list=np.ones(data_length, dtype=float)*0.01
+
+angle_list = np.zeros(data_length, dtype=float)
+distance_list = np.zeros(data_length, dtype=float)
 
 # visulize computed speed 
 plt.ion()
@@ -55,13 +61,14 @@ fig, (ax1, ax2, ax3) = plt.subplots(3, sharey=False)
 ax1.set(title='speed', ylabel='left')
 ax2.set(ylabel='right')
 ax3.set(xlabel='time (s)', ylabel='compare')
-x_axis = np.linspace(0, len(time_list), num=len(time_list), endpoint=False)
-speed_left = np.zeros(len(time_list))
-speed_right = np.zeros(len(time_list))
 plt.show()
+x_axis = np.linspace(0, data_length, num=data_length, endpoint=False)
+speed_left = np.zeros(data_length)
+speed_right = np.zeros(data_length)
 
 left_filter, right_filter = optflow.get_filter(fh, fw)
-for i in range(len(time_list)-frame_num-1):    
+
+while True:    
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     if not ret:
@@ -69,7 +76,6 @@ for i in range(len(time_list)-frame_num-1):
     frame_num += 1    
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = optflow.undistort(temp)
-    next = frame_preprocess(next, scale=1.0, crop_size = [0.0, 0.0])
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
     # speed
