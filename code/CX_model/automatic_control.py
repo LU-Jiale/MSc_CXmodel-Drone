@@ -73,24 +73,26 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-state = arm(drone)
+#state = arm(drone)
 
 # set to mission mode.
-drone.mode = VehicleMode("MISSION")
+'''drone.mode = VehicleMode("MISSION")
 while drone.mode.name != "MISSION":
     print "Waiting for the mission mode."
     time.sleep(2)
 # wait until reach first waypoint
+'''
 nextwaypoint = drone.commands.next
-while nextwaypoint <= 1:
+'''while nextwaypoint <= 1:
     print "Moving to waypoint", drone.commands.next+1
     nextwaypoint = drone.commands.next
     time.sleep(1)
+'''
 
-nextwaypoint = drone.commands.next
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "MISSION":
+#while drone.mode.name == "MISSION":
+for i in range(100):
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
@@ -139,7 +141,7 @@ while drone.mode.name == "MISSION":
         nextwaypoint = drone.commands.next
 
     prvs = next
-#    print('Elapsed time:%.5f'%elapsed_time)
+    print('Elapsed time:%.5f'%elapsed_time)
 
 print "Mission ended or stoppped. The final results of CX model based on optcial flow is:"
 print((angle_optical/np.pi) * 180, distance_optical)

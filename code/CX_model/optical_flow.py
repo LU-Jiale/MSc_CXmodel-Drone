@@ -4,16 +4,16 @@ from numpy import linalg as LA
 
 # compute calibration map matrixes
 DIM=(1296, 972)
-#FRAME_DIM = (324, 244)
-FRAME_DIM = (216, 162)
-#K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
-#           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
-#D=np.array([[-0.8909302058344544], [3.1817023042732813], 
-#            [-12.598093051063067], [17.641313727690882]])
-K=np.array([[649.7237194130138, 0.0, 570.0013929289199], 
-           [0.0, 627.6183259974277, 532.3632845985546], [0.0, 0.0, 1.0]])
-D=np.array([[-0.1428222048947462], [0.22455805794512237], 
-           [-0.2695633377157125], [0.1381009248014135]])
+FRAME_DIM = (1296/2, 972/2)
+#FRAME_DIM = (216, 162)
+K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
+           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
+D=np.array([[-0.8909302058344544], [3.1817023042732813], 
+            [-12.598093051063067], [17.641313727690882]])
+#K=np.array([[649.7237194130138, 0.0, 570.0013929289199], 
+#           [0.0, 627.6183259974277, 532.3632845985546], [0.0, 0.0, 1.0]])
+#D=np.array([[-0.1428222048947462], [0.22455805794512237], 
+#           [-0.2695633377157125], [0.1381009248014135]])
 scaled_K = K * FRAME_DIM[0] / DIM[0]  # The values of K is to scale with image dimension.
 scaled_K[2][2] = 1.0  # Except that K[2][2] is always 1.0
 # This is how scaled_K, dim2 and balance are used to determine the final K used to un-distort image. 
@@ -39,7 +39,8 @@ class Optical_flow():
         undistorted_img = cv2.remap(img, self.map1, self.map2, interpolation= \
                                     cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         # crop images 
-        return undistorted_img[21:118, 18:-1] #[70:200,18:-1]
+        return undistorted_img [210:310, 233:433] #[21:118, 18:-1]
+
 
     def get_filter(self, fh, fw):
         ''' Generate match filter for optical flow computation, one for left 45 degree 
