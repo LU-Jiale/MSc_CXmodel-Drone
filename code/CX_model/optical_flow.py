@@ -5,10 +5,12 @@ from numpy import linalg as LA
 # compute calibration map matrixes
 DIM=(1296, 972)
 FRAME_LARGE= (648, 486)
-K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
-           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
-D=np.array([[-0.8909302058344544], [3.1817023042732813], 
-            [-12.598093051063067], [17.641313727690882]])
+#K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
+#           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
+#D=np.array([[-0.8909302058344544], [3.1817023042732813], 
+#            [-12.598093051063067], [17.641313727690882]])
+K=np.array([[784.8938870557469, 0.0, 669.4820962298741], [0.0, 759.9958084922229, 428.07697355645917], [0.0, 0.0, 1.0]])
+D=np.array([[-0.35791508046509946], [1.455966280285521], [-3.1347760482274825], [2.344865626726683]])
 
 scaled_K = K * FRAME_LARGE[0] / DIM[0]  # The values of K is to scale with image dimension.
 scaled_K[2][2] = 1.0  # Except that K[2][2] is always 1.0
@@ -17,10 +19,10 @@ new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(scaled_K, D, FRAM
 _map1, _map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, FRAME_LARGE, cv2.CV_16SC2)
 
 FRAME_SMALL = (216, 162)
-K=np.array([[649.7237194130138, 0.0, 570.0013929289199], 
-           [0.0, 627.6183259974277, 532.3632845985546], [0.0, 0.0, 1.0]])
-D=np.array([[-0.1428222048947462], [0.22455805794512237], 
-           [-0.2695633377157125], [0.1381009248014135]])
+#K=np.array([[649.7237194130138, 0.0, 570.0013929289199], 
+#           [0.0, 627.6183259974277, 532.3632845985546], [0.0, 0.0, 1.0]])
+#D=np.array([[-0.1428222048947462], [0.22455805794512237], 
+#           [-0.2695633377157125], [0.1381009248014135]])
 scaled_K = K * FRAME_SMALL[0] / DIM[0]  # The values of K is to scale with image dimension.
 scaled_K[2][2] = 1.0  # Except that K[2][2] is always 1.0
 # This is how scaled_K, dim2 and balance are used to determine the final K used to un-distort image. 
@@ -55,7 +57,7 @@ class Optical_flow():
 
     def undistort2(self, img):
         ''' undistort and crop frames from the fisheye image 
-            for resolution [648, 486], ceter at [333,262], angle range [-25,25,-14:14]
+            for resolution [216, 486], ceter at [111,262], angle range [-65,65,-14:14]
         '''
         dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
         assert dim1[0]/dim1[1] == DIM[0]/DIM[1], \
@@ -63,7 +65,7 @@ class Optical_flow():
         undistorted_img = cv2.remap(img, self.map3, self.map4, interpolation= \
                                     cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         # crop images 
-        return undistorted_img #[21:118, 18:-1]
+        return undistorted_img[:, 11:211]
 
 
     def get_filter(self, fh, fw):
