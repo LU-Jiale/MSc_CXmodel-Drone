@@ -58,13 +58,13 @@ left_filter, right_filter = optflow.get_filter(fh, fw)
 if RECORDING == 'true':
     fname = 'video/' + time_string + '.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh))
+    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh), False)
 if not cap.isOpened():
     logging.info('Camera not connected!')
     raise Exception('Camera not connected!')
 
 # connect to PX4 and arm
-try:
+Xtry:
     drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
 except dronekit.APIException:
     logging.critical('Timeout! Fail to connect PX4')

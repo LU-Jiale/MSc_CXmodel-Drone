@@ -26,11 +26,11 @@ def rotate_vector(vector, angle):
     vector[0] = rho * np.sin(phi_l)     # y axis
     
 
-fh = 97
-fw = 197
+fh = 400
+fw = 800
 
-vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(90.0/180.0*np.pi)
-horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(160.0/180.0*np.pi)
+vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(28.0/180.0*np.pi)
+horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(50.0/180.0*np.pi)
 
 D = np.ones([fh,fw,3])*-1
 D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
