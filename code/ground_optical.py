@@ -1,15 +1,14 @@
 import numpy as np
 import cv2
-import cx_rate, cx_basic
-import central_complex
 import sys, os, time
 import dronekit
-import PyQt5
 import matplotlib
 import matplotlib.pyplot as plt
-from graphics import draw_flow, frame_preprocess
-from optical_flow import Optical_flow
-from central_complex import update_cells
+from CX_model import cx_rate, central_complex
+from CX_model.optical_flow import Optical_flow, FRAME_DIM
+from CX_model.central_complex import update_cells
+from CX_model.drone_basic import arm, arm_and_takeoff
+from CX_model.graphics import draw_flow
 
 # initialize CX model
 cx = cx_rate.CXRate(noise = 0)

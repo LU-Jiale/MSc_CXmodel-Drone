@@ -1,9 +1,9 @@
 import numpy as np
-import os
+import os,sys
 import glob
 import matplotlib.pyplot as plt
 
-error_log_path = 'CX_model/log/2018-07-21_09-52-02.log'
+error_log_path = sys.argv[1]
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')
@@ -66,10 +66,10 @@ for i in range(len(navigation_info)):
     elapsed_time = model_info[i].split('elapsed_time:')[-1]
     time_list.append(float(elapsed_time))
     distance = model_info[i].split('Distance_optical:')[1].split(' ')[0]
-    distance_list.append(float(distance)/100)
+    distance_list.append(float(distance))
     
     distance = model_info[i].split('Distance_gps:')[-1].split(' ')[0]
-    distance_list2.append(float(distance)/100)
+    distance_list2.append(float(distance))
 
     angle = model_info[i].split('Angle_optical:')[1].split(' ')[0]
     angle_list1.append(float(angle))

@@ -17,7 +17,7 @@ K=np.array([[743.8040173335771, 0.0, 647.9940524434143],
 D=np.array([[-0.20926662485054526], [-0.04800755535197234], 
            [0.26419146114701453], [-0.1540385750579161]])
 DIM=(1296, 972)
-
+UNDISTORTED_DIM = (200, 126)
 
 class Optical_flow():
 
@@ -53,7 +53,15 @@ class Optical_flow():
         fh_e = int(0.758*dim1[1])
         fw_s = int(0.15*dim1[0])
         fw_e = int(0.85*dim1[0])
-        return undistorted_img[fh_s:fh_e, fw_s:fw_e] 
+        undistorted_img = undistorted_img[fh_s:fh_e, fw_s:fw_e] 
+        # to improve the sampling rates (FPS), the image patch has to be small (200,126)
+        (height, width) = undistorted_img.shape
+        w_half = UNDISTORTED_DIM[0]/2
+        h_half = UNDISTORTED_DIM[1]/2
+        if dim1[0] > 216:
+            undistorted_img = undistorted_img[(height/2-h_half):(height/2+h_half), \
+                                              (width-w_half):(width+w_half)]
+        return undistorted_img
 
 
     def get_filter(self, fh, fw):
