@@ -32,6 +32,8 @@ class Optical_flow():
 
     def undistort(self, img):
         ''' undistort and crop frames from the fisheye image 
+            for resolution [648, 486], ceter at [333,262], angle range [-25,25,-14:14]
+            for resolution []
         '''
         dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
         assert dim1[0]/dim1[1] == DIM[0]/DIM[1], \
@@ -39,7 +41,7 @@ class Optical_flow():
         undistorted_img = cv2.remap(img, self.map1, self.map2, interpolation= \
                                     cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         # crop images 
-        return undistorted_img [210:310, 233:433] #[21:118, 18:-1]
+        return undistorted_img [212:312, 233:433] #[21:118, 18:-1]
 
 
     def get_filter(self, fh, fw):

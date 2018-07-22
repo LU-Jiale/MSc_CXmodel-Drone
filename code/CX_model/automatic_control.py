@@ -45,16 +45,6 @@ fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
 
-# Define the codec and create VideoWriter object
-if RECORDING == 'true':
-    fname = 'video/' + time_string + '.avi'
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh))
-if not cap.isOpened():
-    logging.info('Camera not connected!')
-    raise Exception('Camera not connected!')
-
-
 # intialise optical flow object
 optflow = Optical_flow();
 ret, frame1 = cap.read()
@@ -63,6 +53,15 @@ prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
 left_filter, right_filter = optflow.get_filter(fh, fw)
+
+# Define the codec and create VideoWriter object
+if RECORDING == 'true':
+    fname = 'video/' + time_string + '.avi'
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh))
+if not cap.isOpened():
+    logging.info('Camera not connected!')
+    raise Exception('Camera not connected!')
 
 # connect to PX4 and arm
 try:
@@ -124,7 +123,8 @@ for i in range(100):
 
     # write the frame for later recheck
     if RECORDING == 'true':
-        out.write(frame2)
+        out.write(next)
+
     # logging
     logging.info('sl:{} sr:{} heading:{} velocity:{} position:{}'.format(
                 sl,sr,drone.heading,drone.velocity, drone.location.global_relative_frame))
