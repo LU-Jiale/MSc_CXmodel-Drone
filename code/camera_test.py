@@ -5,9 +5,9 @@ import cv2
 import os
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 
-fw = FRAME_DIM['large'][0]
-fh = FRAME_DIM['large'][1]
-scale = 324.0/fw
+fw = FRAME_DIM['medium'][0]
+fh = FRAME_DIM['medium'][1]
+scale =  2
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,fw)
@@ -30,8 +30,6 @@ if(cap.isOpened()):
             gray = optflow.undistort(gray)
 
             # draw lines on image for calibration angles
-            fh,fw = gray.shape
-
             gray = cv2.line(gray,(1, column_num),(fw, column_num),(255,255,0),1)
             gray = cv2.line(gray,(1, int(fh/2)),(fw, int(fh/2)),(255,255,0),1)
             gray = cv2.line(gray,(column_num, 1),(column_num, fh),(255,255,0),1)

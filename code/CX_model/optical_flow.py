@@ -17,7 +17,7 @@ K=np.array([[743.8040173335771, 0.0, 647.9940524434143],
 D=np.array([[-0.20926662485054526], [-0.04800755535197234], 
            [0.26419146114701453], [-0.1540385750579161]])
 DIM=(1296, 972)
-UNDISTORTED_DIM = (200, 126)
+UNDISTORTED_DIM = (200, 108)
 
 class Optical_flow():
 
@@ -25,6 +25,16 @@ class Optical_flow():
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.accmax = 0.2 * (dim[0]/216.0)*5
+
+        if dim[0]>1000:
+            self.angle_range = (42.0,24.0)
+        elif dim[0]>600:
+            self.angle_range = (70.0,46.0)
+        elif dim[0]>300:
+            self.angle_range = (120.0,74.0)
+        elif dim[0]>200:
+            self.angle_range = (130.0,84.0)
+
 
         assert dim[0]/dim[1] == DIM[0]/DIM[1], \
         "Image to undistort needs to have same aspect ratio as the ones used in calibration"
@@ -41,26 +51,32 @@ class Optical_flow():
 
     def undistort(self, img):
         ''' undistort and crop frames from the fisheye image 
-            for resolution [648, 486], angle range [-65,65,-55:55]
+            for resolution small, angle range [-65,65,-40:40]
+            for resolution medium, angle range [-60:60, -37:37]
+            for resolution large, angle range [-35:35, -23:23]
+            for resolution origin, angle range [-21:21, -12:12] 
         '''
         dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort
         assert dim1[0]/dim1[1] == DIM[0]/DIM[1], \
                "Image to undistort needs to have same aspect ratio as the ones used in calibration"
         undistorted_img = cv2.remap(img, self.map1, self.map2, interpolation= \
                                     cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+         
         # crop images 
-        fh_s = int(0.164*dim1[1])
-        fh_e = int(0.758*dim1[1])
+        fh_s = int(0.2377*dim1[1])
+        fh_e = int(0.7377*dim1[1])
         fw_s = int(0.15*dim1[0])
         fw_e = int(0.85*dim1[0])
         undistorted_img = undistorted_img[fh_s:fh_e, fw_s:fw_e] 
+        
         # to improve the sampling rates (FPS), the image patch has to be small (200,126)
         (height, width) = undistorted_img.shape
         w_half = UNDISTORTED_DIM[0]/2
         h_half = UNDISTORTED_DIM[1]/2
         if dim1[0] > 216:
             undistorted_img = undistorted_img[(height/2-h_half):(height/2+h_half), \
-                                              (width-w_half):(width+w_half)]
+                                              (width/2-w_half):(width/2+w_half)]
+        
         return undistorted_img
 
 
@@ -69,8 +85,8 @@ class Optical_flow():
             one for right 45 degree 
         '''
         # filter for speed retrieval
-        vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(110.0/180.0*np.pi)
-        horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(130.0/180.0*np.pi)
+        vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(self.angle_range[1]/180.0*np.pi)
+        horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(self.angle_range[0]/180.0*np.pi)
         D = np.ones([fh,fw,3])*-1
         D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
         D[:,:,1] = np.tan(horizontal_views)
