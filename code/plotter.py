@@ -3,7 +3,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-error_log_path = 'CX_model/log/2018-07-21_09-52-02.log'
+error_log_path = 'CX_model/log/2018-07-22_08-31-38.log'
 with open(error_log_path) as f:
     data = f.read()
 data = data.split('\n')
@@ -51,10 +51,10 @@ for i in range(len(navigation_info)):
 
     left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi-np.pi/4-np.pi/2))
-    speed_left_real.append(left_real/10.0)
+    speed_left_real.append(left_real/1.0)
     right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi+np.pi/4-np.pi/2))
-    speed_right_real.append(right_real/10.0)
+    speed_right_real.append(right_real/1.0)
 
     alt = navigation_info[i].split('alt=')[-1]
     alt_list.append(float(alt))

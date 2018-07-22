@@ -2,10 +2,10 @@ import sys
 import numpy as np
 import cv2
 import os
-from CX_model.optical_flow import undistort
+from CX_model.optical_flow import Optical_flow
 
-fw = 1296/6
-fh = 972/6
+fw = 1296
+fh = 972
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,fw)
@@ -14,6 +14,8 @@ cap.set(cv2.CAP_PROP_FPS, 30)
 fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print("Frame size: {}*{}".format(fw, fh))
+
+optflow = Optical_flow();
 
 picture_num = 10
 column_num = 0
@@ -25,7 +27,7 @@ if(cap.isOpened()):
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # undistorte image
-            gray = undistort(gray)
+            gray = optflow.undistort(gray)
             # draw lines on image for calibration angles
             fh,fw = gray.shape
             gray = cv2.line(gray,(1, column_num),(fw, column_num),(255,255,0),1)

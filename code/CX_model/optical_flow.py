@@ -54,8 +54,8 @@ class Optical_flow():
         sin_theta = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
         mag_temp = LA.norm(D, axis = 2) + 0.0000001
         D /= mag_temp.reshape(fh,fw,1)
-        a_l = a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
-        a_r = a = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
+        a_l = np.array([1/np.sqrt(2), -1/np.sqrt(2), 0])
+        a_r = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0])
         left_filter = np.cross(np.cross(D,a_l),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
         right_filter = np.cross(np.cross(D,a_r),D)[:,:,0:2] / sin_theta.reshape(fh,fw,1)
         return left_filter, right_filter

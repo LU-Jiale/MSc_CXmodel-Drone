@@ -19,7 +19,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 # initialize camera
 frame_num = 0 
 cap = cv2.VideoCapture(sys.argv[1])
-for i in range(200):              
+for i in range(1):              
     ret, frame1 = cap.read()      # Skip frames
     frame_num += 1
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
