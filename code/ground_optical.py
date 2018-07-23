@@ -25,8 +25,8 @@ temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 dim = temp.shape[::-1]
 
 # intialise optical flow object
-optflow = Optical_flow(dim);
-prvs = optflow.undistort(temp)
+optflow = Optical_flow((312,286));
+prvs = temp #optflow.undistort(temp)
 (fh, fw) = prvs.shape
 print("Frame size: {0}*{1}".format(fw,fh))
 
@@ -74,7 +74,7 @@ while True:
         break
     frame_num += 1    
     temp = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
-    next = optflow.undistort(temp)
+    next = temp #optflow.undistort(temp)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
     # speed

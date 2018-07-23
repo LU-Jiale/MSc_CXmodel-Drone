@@ -43,7 +43,7 @@ for i in range(len(navigation_info)):
 
     heading = float(navigation_info[i].split(' ')[2].split(':')[-1])
     heading_list.append(heading)
-
+    '''
     velocity = navigation_info[i].split('[')[1].split(']')[0].split(', ')
     velocity = [float(j) for j in velocity]
     velocity_x_list.append((velocity[0]))
@@ -55,14 +55,14 @@ for i in range(len(navigation_info)):
     right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi+np.pi/4-np.pi/2))
     speed_right_real.append(right_real/1.0)
-
+    
     alt = navigation_info[i].split('alt=')[-1]
     alt_list.append(float(alt))
     lat = navigation_info[i].split('lat=')[-1].split(',')[0]
     lon = navigation_info[i].split('lon=')[-1].split(',')[0]
     lat_list.append(float(lat))
     lon_list.append(float(lon))
-
+    '''
     elapsed_time = model_info[i].split('elapsed_time:')[-1]
     time_list.append(float(elapsed_time))
     distance = model_info[i].split('Distance_optical:')[1].split(' ')[0]
@@ -87,11 +87,11 @@ ax2.set(xlabel='time (s)', ylabel='Distance')
 x_axis = np.linspace(0, len(navigation_info), num=len(navigation_info), endpoint=False)
 
 ax1.plot(x_axis, speed_left, 'r-')
-ax1.plot(x_axis, speed_left_real, 'b-')
+#ax1.plot(x_axis, speed_left_real, 'b-')
 ax2.plot(x_axis, speed_right, 'r-')
-ax2.plot(x_axis, speed_right_real, 'b-')
-ax3.plot(x_axis, speed_left_real, 'r-')
-ax3.plot(x_axis, speed_right_real, 'b-')
+#ax2.plot(x_axis, speed_right_real, 'b-')
+#ax3.plot(x_axis, speed_left_real, 'r-')
+#ax3.plot(x_axis, speed_right_real, 'b-')
 
 fig2, (ax4, ax5, ax6) = plt.subplots(3, sharey=False)
 ax4.plot(x_axis, angle_list1, 'r-')
