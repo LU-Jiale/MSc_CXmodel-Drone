@@ -10,6 +10,11 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
 
+import dronekit_sitl
+sitl = dronekit_sitl.start_default()
+connection_string = sitl.connection_string()
+
+
 resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
 # command line arguments halder
@@ -66,7 +71,7 @@ if not cap.isOpened():
 
 # connect to PX4 and arm
 try:
-    drone = dronekit.connect('/dev/ttyAMA0', baud = 921600, heartbeat_timeout=15)
+    drone = dronekit.connect(connection_string, baud = 921600, heartbeat_timeout=15)
 except dronekit.APIException:
     logging.critical('Timeout! Fail to connect PX4')
     raise Exception('Timeout! Fail to connct PX4')

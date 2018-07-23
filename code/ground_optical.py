@@ -78,8 +78,10 @@ while True:
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     
     # speed
-    sl, sr = optflow.get_speed(flow, left_filter, right_filter, time_list[frame_num])
-
+    try:
+        sl, sr = optflow.get_speed(flow, left_filter, right_filter, time_list[frame_num])
+    except:
+        break
     # visulize computed speed 
     speed_left = np.roll(speed_left, -1)
     speed_left[-1] = (sl) # + np.sum(speed_left[-3:-1]))/4

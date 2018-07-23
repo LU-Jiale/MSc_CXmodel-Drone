@@ -8,6 +8,8 @@ from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_sq
      PX4setMode, goto_position_target_local_ned
 from pymavlink import mavutil
 
+MAV_MODE_FLAG_GUIDED_ENABLED = 8 
+
 # Try to connect to PX4
 try:
     vehicle = dronekit.connect('/dev/ttyAMA0', baud=921600, wait_ready=True)
@@ -51,7 +53,7 @@ if not vehicle:
 
 goto_position_target_local_ned(vehicle, 0, 0, 10)
 time.sleep(1)
-vehicle.mode = VehicleMode("OFFBOARD")
+PX4setMode(MAV_MODE_FLAG_GUIDED_ENABLED)
 time.sleep(0.1)
 print vehicle.mode.name
 
