@@ -10,7 +10,7 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
 
-resolution = FRAME_DIM['medium']
+resolution = FRAME_DIM['large']
 print "Resolution: ", resolution
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
@@ -75,13 +75,13 @@ except:
 #state = arm(drone)
 
 # wait position/altitude mode.
-while drone.mode.name != "POSCTL" and drone.mode.name != "ALTCTL":
+while drone.mode.name != "POSCTL":
     print "Waiting for the position/altitude mode."
     time.sleep(2)
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "POSCTL" or drone.mode.name == "ALTCTL":
+while drone.mode.name == "POSCTL":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
