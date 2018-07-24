@@ -10,7 +10,7 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
 
-resolution = FRAME_DIM['large']
+resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')

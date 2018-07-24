@@ -9,6 +9,9 @@ from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_sq
 from pymavlink import mavutil
 
 MAV_MODE_FLAG_GUIDED_ENABLED = 8 
+MAV_MODE_FLAG_STABILIZE_ENABLED = 16
+MAV_MODE_GUIDED_DISARMED = 88
+MAV_MODE_STABILIZE_DISARMED = 80
 
 # Try to connect to PX4
 try:
@@ -53,12 +56,13 @@ if not vehicle:
 
 goto_position_target_local_ned(vehicle, 0, 0, 10)
 time.sleep(1)
-PX4setMode(MAV_MODE_FLAG_GUIDED_ENABLED)
-time.sleep(0.1)
+PX4setMode(vehicle, MAV_MODE_FLAG_GUIDED_ENABLED)
+PX4setMode(vehicle, 88)
+time.sleep(3)
 print vehicle.mode.name
 
 while True:
     goto_position_target_local_ned(vehicle, 0, 0, 10)
-    time.sleep(0.1)
+    time.sleep(0.2)
 
 vehicle.close()
