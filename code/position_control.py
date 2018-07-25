@@ -107,7 +107,7 @@ while drone.mode.name == "POSCTL":
                      velocity[1]*np.cos(drone_heading-np.pi/4-np.pi/2))
         right_real = (velocity[0]*np.cos(drone_heading+np.pi/4) + \
                       velocity[1]*np.cos(drone_heading+np.pi/4-np.pi/2))
-        velocity = np.array([left_real, right_real])
+        velocity = np.array([left_real, right_real]) / 4.0  # Normarlized velocity
         __, __, tb1_gps, __, __, memory_gps, cpu4_gps, __, motor_gps = \
                 update_cells(heading=drone_heading, velocity=velocity, \
                              tb1=tb1_gps, memory=memory_gps, cx=cx_gps)

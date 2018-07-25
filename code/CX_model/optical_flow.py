@@ -24,7 +24,7 @@ class Optical_flow():
     def __init__(self, dim):
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
-        self.accmax = 0.2 * (dim[0]/216.0)
+        self.accmax = 0.05 * (dim[0]/216.0)
 
         if dim[0]>1000:
             self.angle_range = (42.0,24.0)
@@ -117,16 +117,12 @@ class Optical_flow():
         '''    
         mag = LA.norm(flow/left_filter, axis=2)
     
-        mag[mag < 3.0] = 0  # filter out those noisy flow
+        mag[mag < 2.0] = 0  # filter out those noisy flow
         mag[mag > 0.0] = 1.0
         count = np.sum(mag)
     
-        (rho, phi) = self.cart2pol(flow[:,:,0], flow[:,:,1])
-        mean = np.mean(phi)
-        phi_diff = phi-mean
-        phi_diff[np.abs(phi_diff)>np.pi/2] = np.pi/2
         #print count
-        weight = mag/(elapsed_time*count*20+1) #* np.cos(phi_diff)
+        weight = mag/(elapsed_time*count*80+1)
         weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
         self.speed_left_buffer = np.roll(self.speed_left_buffer, 1)
         self.speed_left_buffer[0] = np.sum(flow * left_filter * weight)

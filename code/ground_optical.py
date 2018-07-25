@@ -37,6 +37,9 @@ try:
     with open(error_log_path) as f:
         data = f.read()
     data = data.split('\n')
+    while data[0].split(':')[2] != 'sl':
+        print data[0]
+        del data[0]
     navigation_info = []
     model_info = []
     for i in range(len(data)/2):
@@ -48,8 +51,9 @@ try:
         time_list.append(float(elapsed_time))
     data_length = len(model_info)
 except:
+    print "Fail to find log file"
     data_length = 200
-    time_list=np.ones(data_length, dtype=float)*0.01
+    time_list=np.ones(data_length, dtype=float)*0.1
 
 angle_list = np.zeros(data_length, dtype=float)
 distance_list = np.zeros(data_length, dtype=float)
@@ -84,9 +88,9 @@ while True:
         break
     # visulize computed speed 
     speed_left = np.roll(speed_left, -1)
-    speed_left[-1] = (sl) # + np.sum(speed_left[-3:-1]))/4
+    speed_left[-1] = sl 
     speed_right = np.roll(speed_right, -1)
-    speed_right[-1] = (sr) # + np.sum(speed_right[-3:-1]))/4
+    speed_right[-1] = sr
     ax1.clear()
     ax2.clear()
     ax3.clear()
@@ -101,8 +105,8 @@ while True:
     tl2, cl1, tb1, tn1, tn2, memory, cpu4, cpu1, motor = update_cells(
             heading=np.pi, velocity=velocity, tb1=tb1, memory=memory, cx=cx)
     angle, distance = cx.decode_cpu4(cpu4)
-    angle_list[i] = angle/np.pi*180.0
-    distance_list[i] = distance
+    angle_list[frame_num] = angle/np.pi*180.0
+    distance_list[frame_num] = distance
 
     # show frames
     cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=3.0, fy=3.0))
@@ -112,9 +116,9 @@ while True:
     prvs = next
     start_time = time.time()
 
-fig, (ax1, ax2) = plt.subplots(2, sharey=False)
-ax1.plot(x_axis, angle_list, 'b-')
-ax2.plot(x_axis, distance_list, 'b-')
+fig2, (ax4, ax5) = plt.subplots(2, sharey=False)
+ax4.plot(x_axis, angle_list, 'b-')
+ax5.plot(x_axis, distance_list, 'b-')
 plt.show()
 
 cv2.waitKey()

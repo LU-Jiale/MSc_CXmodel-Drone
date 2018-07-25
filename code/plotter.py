@@ -83,7 +83,7 @@ for i in range(len(navigation_info)):
     sl=navigation_info[i].split(' ')[0].split(':')[-1]
     sr=navigation_info[i].split(' ')[1].split(':')[-1]
     speed_left.append(float(sl)) #*alt*alt/25)
-    speed_right.append(float(sr))  #*alt*alt/25)
+    speed_right.append(float(sr)) #*alt*alt/25)
 
     heading = float(navigation_info[i].split(' ')[2].split(':')[-1])
     heading_list.append(heading)
@@ -131,12 +131,13 @@ ax1.set(title='Speed and altitude', ylabel='left')
 ax2.set(ylabel='right')
 ax3.set(xlabel='time (s)', ylabel='Altitude')
 
-ax1.plot(x_axis, speed_left, 'r-')
-ax1.plot(x_axis, speed_left_real, 'b-')
+ax1.plot(x_axis, speed_left, 'r-', label='optical_based')
+ax1.plot(x_axis, speed_left_real, 'b-', label='gps_based')
 ax2.plot(x_axis, speed_right, 'r-')
 ax2.plot(x_axis, speed_right_real, 'b-')
-ax3.plot(x_axis, alt_list, 'r-')
-
+ax3.plot(x_axis, alt_list, 'g-')
+fig1.legend(ncol=3)
+fig1.subplots_adjust(hspace=0.3)
 # left-right speed compare
 fig2, (ax4, ax5) = plt.subplots(2, sharey=False)
 ax4.set(title='Speed compare', ylabel='optical')
@@ -149,14 +150,14 @@ ax5.plot(x_axis, speed_right_real, 'b-')
 
 # show distance and angle
 fig3, (ax6, ax7, ax8, ax9) = plt.subplots(4, sharey=False)
-ax6.set(title='Navigation angle and distance', ylabel='heading')
-ax7.set(ylabel='angle')
-ax8.set(ylabel='distance')
-ax9.set(xlabel='time (s)', ylabel='real distance')
+ax6.set(title='Navigation data', ylabel='heading')
+ax7.set(ylabel='home_vector angle')
+ax8.set(ylabel='home_vector distance')
+ax9.set(xlabel='time (s)', ylabel='gps_based distance')
 
 ax6.plot(x_axis, heading_list)
-ax7.plot(x_axis, angle_list_optical, 'r-', label='optical')
-ax7.plot(x_axis, angle_list_gps, 'b-', label='gps')
+ax7.plot(x_axis, angle_list_optical, 'r-', label='optical_CX')
+ax7.plot(x_axis, angle_list_gps, 'b-', label='gps_CX')
 ax7.plot(x_axis, angle_real, 'g-', label='real')
 ax8.plot(x_axis, distance_list_optical, 'r-')
 ax8.plot(x_axis, distance_list_gps, 'b-')

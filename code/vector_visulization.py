@@ -3,11 +3,12 @@ import numpy as np
 import cv2
 from numpy import ma
 from numpy import linalg as LA
+from CX_model.optical_flow import Optical_flow, FRAME_DIM
 
-def draw_flow(img, flow, step=20):
+def draw_flow(img, flow, step=10):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1)
-    fx, fy = flow[y,x].T *10
+    fx, fy = flow[y,x].T *5
     lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
     lines = np.int32(lines + 0.5)
     vis = img
@@ -28,7 +29,7 @@ def rotate_vector(vector, angle):
 
 fh = 200
 fw = 400
-
+'''
 vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(110.0/180.0*np.pi)
 horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(130.0/180.0*np.pi)
 
@@ -61,6 +62,11 @@ matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
 img = np.ones([fh,fw,3])
 vector_map = draw_flow(img, matched_filter)
 cv2.imshow('filter2', vector_map)
-
+'''
+optflow = Optical_flow((1296, 972));
+left_filter, right_filter = optflow.get_filter(110, 200)
+img = np.ones([110,200,3])
+vector_map = draw_flow(img, right_filter)
+cv2.imshow('filter1', vector_map)
 cv2.waitKey()
 cv2.destroyAllWindows()

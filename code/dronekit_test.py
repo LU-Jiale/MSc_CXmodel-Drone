@@ -8,9 +8,12 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGloba
 from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode, adds_Lshape_mission 
 from pymavlink import mavutil
 
+connection_string = "127.0.0.1:14550"
+#connection_string = '/dev/ttyAMA0'
+
 # Try to connect to PX4
 try:
-    vehicle = dronekit.connect('/dev/ttyAMA0', baud=921600, wait_ready=True)
+    vehicle = dronekit.connect(connection_string)
 # Bad TCP connection
 except socket.error:
     print 'No server exists!'
@@ -25,10 +28,11 @@ except:
     print 'Some other error!'
 
 # Get all vehicle attributes (state)
-print "\nGet all vehicle attribute values:"
+'''print "\nGet all vehicle attribute values:"
 print "   Supports commanding attitude offboard: %s" % vehicle.capabilities.set_attitude_target
 print "   Supports commanding position and velocity targets in local NED frame: %s" % vehicle.capabilities.set_attitude_target_local_ned
 print "   Supports set position + velocity targets in global scaled integers: %s" % vehicle.capabilities.set_altitude_target_global_int
+'''
 print " Global Location: %s" % vehicle.location.global_frame
 print " Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
 print " Local Location: %s" % vehicle.location.local_frame
