@@ -110,7 +110,7 @@ while drone.mode.name == "GUIDED":
         heading = motor_gps*10000.0
         heading = np.min([np.max([-5,heading]), 5])
         #navigation_heading += heading
-        if heading > 2.0:
+        if np.abs(heading) > 2.0:
             print "rotating"
             condition_yaw(drone, heading, relative=True)
     if frame_num % 5 == 0:
