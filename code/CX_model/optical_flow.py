@@ -24,7 +24,7 @@ class Optical_flow():
     def __init__(self, dim):
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
-        self.accmax = 0.05 * (dim[0]/216.0)
+        self.accmax = 0.02 * (dim[0]/324.0)
 
         if dim[0]>1000:
             self.angle_range = (42.0,24.0)

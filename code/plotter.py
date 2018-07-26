@@ -82,7 +82,7 @@ for i in range(len(navigation_info)):
 
     sl=navigation_info[i].split(' ')[0].split(':')[-1]
     sr=navigation_info[i].split(' ')[1].split(':')[-1]
-    speed_left.append(float(sl)) #*alt*alt/25)
+    speed_left.append(float(sl)) #\*alt*alt/25)
     speed_right.append(float(sr)) #*alt*alt/25)
 
     heading = float(navigation_info[i].split(' ')[2].split(':')[-1])
@@ -95,10 +95,10 @@ for i in range(len(navigation_info)):
 
     left_real = (velocity[0]*np.cos(heading/180.0*np.pi-np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi-np.pi/4-np.pi/2))
-    speed_left_real.append(left_real/1.0)
+    speed_left_real.append(left_real/4.0)
     right_real = (velocity[0]*np.cos(heading/180.0*np.pi+np.pi/4) + 
                 velocity[1]*np.cos(heading/180.0*np.pi+np.pi/4-np.pi/2))
-    speed_right_real.append(right_real/1.0)   
+    speed_right_real.append(right_real/4.0)   
     
     
     elapsed_time = model_info[i].split('elapsed_time:')[-1]

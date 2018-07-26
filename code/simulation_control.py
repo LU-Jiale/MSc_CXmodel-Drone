@@ -12,7 +12,6 @@ from CX_model.drone_ardupilot import arm, arm_and_takeoff, condition_yaw, send_n
 
 connection_string = "127.0.0.1:14550"
 
-
 # initialize CX models
 cx_gps = cx_rate.CXRate(noise = 0)
 tb1_gps = np.zeros(central_complex.N_TB1)
@@ -78,7 +77,7 @@ while drone.mode.name == "AUTO":
         nextwaypoint = drone.commands.next
                
 
-    time.sleep(0.02)
+    time.sleep(0.1)
 
 print "Mission ended or stoppped. The final results of CX model based on optcial flow is:"
 print((angle_gps/np.pi) * 180, distance_gps)
@@ -92,7 +91,7 @@ count = 0
 while drone.mode.name == "GUIDED":
 
     velocity = drone.velocity
-    drone_heading = navigation_heading/180.0*np.pi
+    drone_heading = drone.heading/180.0*np.pi
 
     if velocity[0]:
         left_real = (velocity[0]*np.cos(drone_heading-np.pi/4) + \
@@ -105,24 +104,26 @@ while drone.mode.name == "GUIDED":
                              tb1=tb1_gps, memory=memory_gps, cx=cx_gps)
     
     frame_num += 1
-    heading = motor_gps*100.0
-    heading = np.min([np.max([-3,heading]), 3])
-    #if (frame_num + 10) % 20==0:
-        #condition_yaw(drone, heading, relative=True)
-    if frame_num % 10:
-        navigation_heading += heading
     
-    if frame_num % 25 == 0:
+
+    if (frame_num) % 5==0:
+        heading = motor_gps*10000.0
+        heading = np.min([np.max([-5,heading]), 5])
+        #navigation_heading += heading
+        if heading > 2.0:
+            print "rotating"
+            condition_yaw(drone, heading, relative=True)
+    if frame_num % 5 == 0:
        send_ned_velocity(drone, 3*np.cos(drone_heading), 3*np.sin(drone_heading), 0, 1)
      # logging
      # moniter the mission
-    if frame_num % 50==0:
+    if frame_num % 10==0:
         # logging
         angle_gps, distance_gps = cx_gps.decode_cpu4(cpu4_gps) 
-        print('heading:{} Angle:{} Distance:{} motor:{}'.format(navigation_heading, 
+        print('heading:{} Angle:{} Distance:{} motor:{}'.format(drone_heading, 
               (angle_gps/np.pi)*180.0, distance_gps, motor_gps))
 
-    time.sleep(0.02)
+    time.sleep(0.1)
 
 #drone.mode = VehicleMode("LAND")
 

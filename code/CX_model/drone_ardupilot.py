@@ -129,6 +129,7 @@ def condition_yaw(vehicle, heading, relative=False):
         0, 0, 0)    # param 5 ~ 7 not used
     # send command to vehicle
     vehicle.send_mavlink(msg)
+    time.sleep(0.001)
 
 
 def get_location_metres(original_location, dNorth, dEast):
