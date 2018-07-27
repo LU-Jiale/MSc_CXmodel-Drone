@@ -112,7 +112,7 @@ class Optical_flow():
         return(x, y)
 
 
-    def get_speed(self, flow, left_filter, right_filter, rot_filter, elapsed_time):
+    def get_speed(self, flow, left_filter, right_filter, elapsed_time):
         ''' calculate speeds from optical flow using match filters
         '''    
         mag = LA.norm(flow/left_filter, axis=2)
