@@ -26,16 +26,16 @@ def rotate_vector(vector, angle):
     vector[1] = rho * np.cos(phi_l)     # x axis
     vector[0] = rho * np.sin(phi_l)     # y axis
     
-
-fh = 200
-fw = 400
 '''
+fh = 110*4
+fw = 200*4
+
 vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(110.0/180.0*np.pi)
 horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(130.0/180.0*np.pi)
 
 D = np.ones([fh,fw,3])*-1
-D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
-D[:,:,1] = np.tan(horizontal_views)
+D[:,:,1] = np.tan(vertical_views).reshape(fh, 1)
+D[:,:,0] = np.tan(horizontal_views)
 #mag_temp = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
 #normlizer = np.array([mag_temp, mag_temp, mag_temp])
 #D /= normlizer
@@ -53,20 +53,27 @@ cv2.imshow('filter1', vector_map)
 D = np.zeros([fh,fw,3])
 for i in range(fh):
     for j in range(fw):
-        D[i,j]=np.array([np.tan(vertical_views[i]), np.tan(horizontal_views[j]),-1])
+        D[i,j]=np.array([np.tan(horizontal_views[j]), np.tan(vertical_views[i]), -1])
         D[i,j] /= LA.norm(D[i,j])
 
-a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0]) 
-matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
+#a = np.array([1/np.sqrt(2), 1/np.sqrt(2), 0]) 
+a = np.array([0, 0, -1]) 
+#matched_filter = np.cross(np.cross(D,a),D)[:,:,0:2]
+matched_filter = np.cross(a, D, axisa=0, axisb=2, axisc=2)[:,:,0:2]
+#matched_filter = np.ones([fh,fw,2]) * np.array([0,1])
 # show vector map
 img = np.ones([fh,fw,3])
 vector_map = draw_flow(img, matched_filter)
 cv2.imshow('filter2', vector_map)
 '''
-optflow = Optical_flow((1296, 972));
-left_filter, right_filter = optflow.get_filter(110, 200)
+optflow = Optical_flow((324, 248));
+left_filter, right_filter, rot_filter = optflow.get_filter(110, 200)
 img = np.ones([110,200,3])
-vector_map = draw_flow(img, right_filter)
-cv2.imshow('filter1', vector_map)
+vector_map = draw_flow(img, left_filter)
+cv2.imshow('filter_left', vector_map)
+img = np.ones([110,200,3])
+vector_map = draw_flow(img, rot_filter)
+cv2.imshow('rotation_right', vector_map)
 cv2.waitKey()
 cv2.destroyAllWindows()
+

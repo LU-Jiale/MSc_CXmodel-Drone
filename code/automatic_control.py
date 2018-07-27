@@ -76,8 +76,8 @@ except:
 state = arm(drone)
 
 # set to mission mode.
-drone.mode = VehicleMode("MISSION")
-while drone.mode.name != "MISSION":
+drone.mode = VehicleMode("AUTO")
+while drone.mode.name != "AUTO":
     print "Waiting for the mission mode."
     time.sleep(2)
 # wait until reach first waypoint, 1->home, 2->takeoff
@@ -90,7 +90,7 @@ while nextwaypoint <= 1:
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "MISSION":
+while drone.mode.name == "AUTO":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1

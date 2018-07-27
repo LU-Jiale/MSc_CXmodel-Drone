@@ -60,14 +60,20 @@ distance_list = np.zeros(data_length, dtype=float)
 
 # visulize computed speed 
 plt.ion()
-fig, (ax1, ax2, ax3) = plt.subplots(3, sharey=False)
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharey=False)
 ax1.set(title='speed', ylabel='left')
 ax2.set(ylabel='right')
 ax3.set(xlabel='time (s)', ylabel='compare')
+ax4.set(xlabel='group', ylabel='number')
 plt.show()
 x_axis = np.linspace(0, data_length, num=data_length, endpoint=False)
+index = np.arange(36)
+
+
 speed_left = np.zeros(data_length)
 speed_right = np.zeros(data_length)
+speed_rotation = np.zeros(data_length)
+optical_direction = np.zeros(36)
 
 left_filter, right_filter = optflow.get_filter(fh, fw)
 
@@ -83,21 +89,37 @@ while True:
     
     # speed
     try:
-        sl, sr = optflow.get_speed(flow, left_filter, right_filter, time_list[frame_num])
+        sl, sr, s_rot = optflow.get_speed(flow, left_filter, right_filter, rot_filter, time_list[frame_num])
     except:
         break
+
+    # optical flow heading
+    __, phi = optflow.cart2pol(flow[:,:,0], flow[:,:,1])
+    phi = phi/np.pi*180.0
+    deg = np.ceil(phi/10).flatten()
+    deg = np.sort(np.append(deg, np.arange(-17,19)))  # add elements to make sure every group have at least one element
+    _shift = np.roll(deg, -1)
+    count_deg = np.array(np.nonzero(_shift - deg)).flatten()
+    _shift = np.roll(count_deg, 1)
+    _shift[0] = 0
+    count_deg = count_deg - _shift
+    optical_direction = np.array(count_deg).flatten()
+
     # visulize computed speed 
     speed_left = np.roll(speed_left, -1)
     speed_left[-1] = sl 
     speed_right = np.roll(speed_right, -1)
     speed_right[-1] = sr
+
     ax1.clear()
     ax2.clear()
     ax3.clear()
+    ax4.clear()
     ax1.plot(x_axis, speed_left, 'r-')
     ax2.plot(x_axis, speed_right, 'b-')
     ax3.plot(x_axis, speed_left, 'r-')
     ax3.plot(x_axis, speed_right, 'b-')
+    ax4.bar(index, optical_direction, color='r', label='degree')
     plt.draw()
 
     # updare cx_neurons
@@ -111,13 +133,20 @@ while True:
     # show frames
     cv2.imshow('vedio', cv2.resize(draw_flow(next, flow), (0,0), fx=3.0, fy=3.0))
     #print('Frame number: ', frame_num)
-    if cv2.waitKey(5) & 0xFF == ord('q'):
+    ch = cv2.waitKey(5) & 0xFF 
+    if ch == ord('q'):
         break
+    elif ch == ord(' '):
+        while True:
+            ch = cv2.waitKey(5) & 0xFF
+            if ch == ord(' ') or ch == ord('q'):
+                break
+            time.sleep(0.2)
     prvs = next
     start_time = time.time()
 
-fig2, (ax4, ax5) = plt.subplots(2, sharey=False)
-ax4.plot(x_axis, angle_list, 'b-')
+fig2, (ax6, ax5) = plt.subplots(2, sharey=False)
+ax6.plot(x_axis, angle_list, 'b-')
 ax5.plot(x_axis, distance_list, 'b-')
 plt.show()
 

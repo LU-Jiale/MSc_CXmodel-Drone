@@ -109,16 +109,16 @@ while drone.mode.name == "GUIDED":
     if (frame_num) % 5==0:
         heading = motor_gps*10000.0
         heading = np.min([np.max([-5,heading]), 5])
+        print heading
         #navigation_heading += heading
         if np.abs(heading) > 2.0:
             print "rotating"
             condition_yaw(drone, heading, relative=True)
-    if frame_num % 5 == 0:
+    if frame_num % 6 == 0:
        send_ned_velocity(drone, 3*np.cos(drone_heading), 3*np.sin(drone_heading), 0, 1)
-     # logging
-     # moniter the mission
+
+    # logging
     if frame_num % 10==0:
-        # logging
         angle_gps, distance_gps = cx_gps.decode_cpu4(cpu4_gps) 
         print('heading:{} Angle:{} Distance:{} motor:{}'.format(drone_heading, 
               (angle_gps/np.pi)*180.0, distance_gps, motor_gps))

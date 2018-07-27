@@ -24,7 +24,7 @@ class Optical_flow():
     def __init__(self, dim):
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
-        self.accmax = 0.02 * (dim[0]/324.0)
+        self.accmax = 0.03 * (dim[0]/324.0)
 
         if dim[0]>1000:
             self.angle_range = (42.0,24.0)
@@ -88,8 +88,8 @@ class Optical_flow():
         vertical_views = (np.arange(fh, dtype=float)-fh/2)/fh*(self.angle_range[1]/180.0*np.pi)
         horizontal_views = (np.arange(fw, dtype=float)-fw/2)/fw*(self.angle_range[0]/180.0*np.pi)
         D = np.ones([fh,fw,3])*-1
-        D[:,:,0] = np.tan(vertical_views).reshape(fh, 1)
-        D[:,:,1] = np.tan(horizontal_views)
+        D[:,:,1] = np.tan(vertical_views).reshape(fh, 1)
+        D[:,:,0] = np.tan(horizontal_views)
         sin_theta = LA.norm(D[:,:,0:2], axis = 2) + 0.0000001
         mag_temp = LA.norm(D, axis = 2) + 0.0000001
         D /= mag_temp.reshape(fh,fw,1)
@@ -112,7 +112,7 @@ class Optical_flow():
         return(x, y)
 
 
-    def get_speed(self, flow, left_filter, right_filter, elapsed_time):
+    def get_speed(self, flow, left_filter, right_filter, rot_filter, elapsed_time):
         ''' calculate speeds from optical flow using match filters
         '''    
         mag = LA.norm(flow/left_filter, axis=2)
@@ -134,5 +134,6 @@ class Optical_flow():
         sr = np.max([np.min([self.speed_right_buffer[1]+self.accmax, sr]), self.speed_right_buffer[1]-self.accmax])
         self.speed_left_buffer[0] = sl
         self.speed_right_buffer[0] = sr
+
         return sl, sr
     
