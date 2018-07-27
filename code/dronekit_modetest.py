@@ -31,9 +31,6 @@ except:
 
 # Get all vehicle attributes (state)
 print "\nGet all vehicle attribute values:"
-print "   Supports commanding attitude offboard: %s" % vehicle.capabilities.set_attitude_target
-print "   Supports commanding position and velocity targets in local NED frame: %s" % vehicle.capabilities.set_attitude_target_local_ned
-print "   Supports set position + velocity targets in global scaled integers: %s" % vehicle.capabilities.set_altitude_target_global_int
 print " Global Location: %s" % vehicle.location.global_frame
 print " Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
 print " Local Location: %s" % vehicle.location.local_frame
@@ -54,15 +51,11 @@ print " Armed: %s" % vehicle.armed    # settable
 if not vehicle:
     raise Exception("Fail to connect PX4")
 
-goto_position_target_local_ned(vehicle, 0, 0, 10)
+vehicle.mode = VehicleMode("GUIDED")
 time.sleep(1)
-PX4setMode(vehicle, MAV_MODE_FLAG_GUIDED_ENABLED)
-PX4setMode(vehicle, 88)
-time.sleep(3)
 print vehicle.mode.name
 
 while True:
-    goto_position_target_local_ned(vehicle, 0, 0, 10)
-    time.sleep(0.2)
-
+    print "Range finder value:", vehicle.rangefinder.distance
+    time.sleep(0.25)
 vehicle.close()
