@@ -10,7 +10,8 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_ardupilot import arm, arm_and_takeoff, condition_yaw, send_ned_velocity
 
-connection_string = "127.0.0.1:14550"
+#connection_string = "127.0.0.1:14550"
+connection_string = '/dev/ttyAMA0'
 
 # initialize logger
 time_string = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_').split('.')[0]
@@ -25,7 +26,7 @@ cpu4_gps = np.zeros(16)
 
 # connect to PX4 and arm
 try:
-    drone = dronekit.connect(connection_string, baud = 51600, heartbeat_timeout=15)
+    drone = dronekit.connect(connection_string, baud = 921600, heartbeat_timeout=15)
 except dronekit.APIException:
     logging.critical('Timeout! Fail to connect PX4')
     raise Exception('Timeout! Fail to connct PX4')

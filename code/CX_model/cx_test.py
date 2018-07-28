@@ -52,7 +52,7 @@ def get_abgle_degrees(aLocation1, aLocation2):
     dlat = (aLocation2[LAT] - aLocation1[LAT]) * 1.113195e5
     dlong = (aLocation2[LON]- aLocation1[LON]) * 1.113195e5
     return -np.arctan2(dlong, dlat)/np.pi*180
-
+'''
 # load log file
 error_log_path = sys.argv[1]
 with open(error_log_path) as f:
@@ -143,7 +143,7 @@ for i in range(len(navigation_info)):
     angle = model_info[i].split('Angle_gps:')[-1].split(' ')[0]
     angle_list_gps.append(float(angle))
 
-
+'''
 # initialize CX model
 #cx = cx_basic.CXBasic()
 cx = cx_rate.CXRate(noise=0)
@@ -153,8 +153,7 @@ memory = 0.5 * np.ones(central_complex.N_CPU4)
 T = 300
 velocity = np.ones([T,2], dtype=float) 
 headings = np.zeros(T, dtype=float) + 90
-headings[100:200] = 0
-headings[200:300] = -90
+headings[150:300] = 0
 heading_list = headings
 for t in range(T): #range(len(speed_left)): #
         #speed = np.array([speed_left_real[t], speed_right_real[t]])
@@ -163,7 +162,39 @@ for t in range(T): #range(len(speed_left)): #
         __, __, tb1, __, __, memory, cpu4, __, motor = update_cells(
             heading=heading_list[t]/180.0*np.pi, velocity=speed, tb1=tb1, memory=memory, cx=cx)
 
-        angle, distance = cx.decode_cpu4(cpu4)
-        angle_degree = angle/np.pi * 180
-        print "Epoch %d, Angle:%.2f  Distance:%.2f Motor:%.2f" % (t, angle_degree, distance, motor)
-        #time.sleep(0.1)
+angle, distance = cx.decode_cpu4(cpu4)
+angle_degree = angle/np.pi * 180
+print "Epoch %d, Angle:%.2f  Distance:%.2f Motor:%.2f" % (t, angle_degree, distance, motor)
+#time.sleep(0.1)
+
+_cx = cx_rate.CXRate(noise=0)
+_tb1 = np.zeros(central_complex.N_TB1)
+_memory = 0.5 * np.ones(central_complex.N_CPU4)
+velocity = np.ones([T,2], dtype=float) 
+headings = np.zeros(T, dtype=float) - 90
+headings[150:300] = 0
+heading_list = headings
+
+for t in range(T): #range(len(speed_left)): #
+        #speed = np.array([speed_left_real[t], speed_right_real[t]])
+        speed = velocity[t];
+
+        __, __, _tb1, __, __, _memory, _cpu4, __, motor = update_cells(
+            heading=heading_list[t]/180.0*np.pi, velocity=speed, tb1=_tb1, memory=_memory, cx=_cx)
+
+angle, distance = cx.decode_cpu4(_cpu4)
+angle_degree = angle/np.pi * 180
+print "Epoch %d, Angle:%.2f  Distance:%.2f Motor:%.2f" % (t, angle_degree, distance, motor)
+
+cx_sc = cx_rate.CXRate(noise=0)
+tb1_sc = tb1 + _tb1
+memory_sc = memory + _memory
+__, __, tb1_sc, __, __, memory_sc, cpu4_sc, __, motor = update_cells(
+            heading=0, velocity=np.array([0,0]), tb1=tb1_sc, memory=memory_sc, cx=cx_sc)
+
+angle, distance = cx_sc.decode_cpu4(cpu4_sc)
+angle_degree = angle/np.pi * 180
+print "Epoch %d, Angle:%.2f  Distance:%.2f Motor:%.2f" % (t, angle_degree, distance, motor)
+
+
+
