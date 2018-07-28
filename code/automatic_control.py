@@ -8,7 +8,7 @@ from CX_model import cx_rate, central_complex
 from dronekit import VehicleMode
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
-from CX_model.drone_basic import arm, arm_and_takeoff
+from CX_model.drone_ardupilot import arm, arm_and_takeoff
 
 resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
@@ -73,7 +73,7 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-state = arm(drone)
+state = arm_and_takeoff(drone, 5)
 
 # set to mission mode.
 drone.mode = VehicleMode("AUTO")

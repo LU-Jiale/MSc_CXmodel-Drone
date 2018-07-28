@@ -33,7 +33,7 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-state = arm_and_takeoff(drone, 7)
+state = arm_and_takeoff(drone,5)
 
 # set to mission mode.
 drone.mode = VehicleMode("AUTO")
