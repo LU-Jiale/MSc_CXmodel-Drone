@@ -76,13 +76,13 @@ except:
 #state = arm(drone)
 
 # wait position/altitude mode.
-while drone.mode.name != "POSCTL":
+while drone.mode.name != "POSHOLD":
     print "Waiting for the position/altitude mode."
     time.sleep(2)
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "POSCTL":
+while drone.mode.name == "POSHOLD":
     # Image processing, compute optical flow
     ret, frame2 = cap.read()
     frame_num += 1
