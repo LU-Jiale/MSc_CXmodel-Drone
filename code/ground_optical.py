@@ -89,8 +89,9 @@ while True:
     
     # speed
     try:
-        sl, sr, s_rot = optflow.get_speed(flow, left_filter, right_filter, rot_filter, time_list[frame_num])
+        sl, sr = optflow.get_speed(flow, left_filter, right_filter, time_list[frame_num])
     except:
+        print "Optical flow speed retrieval failed"
         break
 
     # optical flow heading
