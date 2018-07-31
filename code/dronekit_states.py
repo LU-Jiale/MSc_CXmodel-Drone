@@ -7,9 +7,12 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGloba
 from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_square_mission, PX4setMode
 from pymavlink import mavutil
 
+connection_string = "127.0.0.1:14550"
+connection_string = '/dev/ttyAMA0'
+
 # Try to connect to PX4
 try:
-    vehicle = dronekit.connect('/dev/ttyAMA0', baud=921600, wait_ready=True)
+    vehicle = dronekit.connect(connection_string, baud=921600, wait_ready=True)
 # Bad TCP connection
 except socket.error:
     print 'No server exists!'
@@ -39,27 +42,14 @@ print " Airspeed: %s" % vehicle.airspeed    # settable
 print " Mode: %s" % vehicle.mode.name    # settable
 print " Armed: %s" % vehicle.armed    # settable
 
-if vehicle:
-    # old mission
-    cmds = download_mission(vehicle.commands)
-    
-    # monitor mission execution
-    nextwaypoint = vehicle.commands.next
-    while nextwaypoint < len(vehicle.commands):
-        if vehicle.commands.next > nextwaypoint:
-            display_seq = vehicle.commands.next+1
-            print "Moving to waypoint %s" % display_seq
-            nextwaypoint = vehicle.commands.next
-        time.sleep(1)
+if not vehicle:
+   raise Exception('Fail to connect Pixhawk!')
 
-    # wait for the vehicle to land
-    while vehicle.commands.next > 0:
-        print "Waitin for landing."
-        time.sleep(1)
+for i in range(100):
 
-    # Disarm vehicle
-    vehicle.armed = False
     time.sleep(1)
+    print ("Range finder value:", vehicle.rangefinder.distance)
+    time.sleep(0.25)
 
 # Close vehicle object before exiting script
 vehicle.close()
