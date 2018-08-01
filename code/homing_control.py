@@ -10,8 +10,8 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_ardupilot import arm, arm_and_takeoff, condition_yaw, send_ned_velocity
 
-connection_string = "127.0.0.1:14550"
-#connection_string = '/dev/ttyAMA0'
+#connection_string = "127.0.0.1:14550"
+connection_string = '/dev/ttyAMA0'
 
 # initialize logger
 time_string = str(datetime.datetime.now()).replace(':', '-').replace(' ', '_').split('.')[0]
