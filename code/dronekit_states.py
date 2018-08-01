@@ -8,7 +8,7 @@ from CX_model.drone_basic import arm, arm_and_takeoff, download_mission, adds_sq
 from pymavlink import mavutil
 
 connection_string = "127.0.0.1:14550"
-connection_string = '/dev/ttyAMA0'
+#connection_string = '/dev/ttyAMA0'
 
 # Try to connect to PX4
 try:
@@ -44,6 +44,11 @@ print " Armed: %s" % vehicle.armed    # settable
 
 if not vehicle:
    raise Exception('Fail to connect Pixhawk!')
+
+# show mission information
+cmds = download_mission(vehicle.commands)
+for cmd in cmds:
+    print cmd.x, cmd.y, cmd.z
 
 for i in range(100):
 

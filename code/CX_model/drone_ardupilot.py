@@ -1,5 +1,6 @@
 import time
 import math
+import numpy as np
 import dronekit
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 from pymavlink import mavutil
@@ -179,6 +180,19 @@ def get_distance_metres(aLocation1, aLocation2):
     dlat = aLocation2.lat - aLocation1.lat
     dlong = aLocation2.lon - aLocation1.lon
     return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
+
+
+def get_angles_degree(aLocation1, aLocation2):
+    """
+    Returns the angle in degrees between two LocationGlobal objects.
+
+    This method is an approximation, and will not be accurate over large distances and close to the 
+    earth's poles. It comes from the ArduPilot test code: 
+    https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
+    """
+    dlat = (aLocation2.lat - aLocation1.lat) * 1.113195e5
+    dlong = (aLocation2.lon - aLocation1.lon) * 1.113195e5
+    return np.arctan2(dlat, dlong)/np.pi * 180.0
 
 
 def goto(vehicle, dNorth, dEast, gotoFunction):
@@ -375,10 +389,8 @@ def adds_Lshape_mission(vehicle, home, aSize, alt):
     cmds.add(cmd)
 
     # Upload mission
-    cmds.upload()
-    time.sleep(2)
-
     print " Upload new commands to vehicle"
     cmds.upload()
+    time.sleep(2)
 
 

@@ -147,12 +147,18 @@ while drone.mode.name == "AUTO":
     prvs = next
     #print('Elapsed time:%.5f'%elapsed_time)
 
+
+# land for measure distance
+drone.mode = VehicleMode("LAND")
+time.sleep(1)
+# wait until GUIDED mode is set
+while drone.mode.name != "GUIDED":
+    print "Waiting for the GUIDED mode."
+    time.sleep(2)
+state = arm_and_takeoff(drone, 5)
 # -------------------------------------homing-----------------------------------------------
 # ------------------stop when the same period of time reached-------------------------------
 #-------------------------------------------------------------------------------------------
-drone.mode = VehicleMode("GUIDED")
-time.sleep(1)
-
 # rotate to return direction first
 while drone.mode.name == "GUIDED":
 
