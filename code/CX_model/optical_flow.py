@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 from numpy import linalg as LA
-FRAME_DIM = {'small':(216, 162), 'medium':(324, 243), \
-             'large':(648, 486), 'origin':(1296, 972)}
+FRAME_DIM = {'small':(216, 162), 'medium':(320, 240), \
+             'large':(656, 496), 'origin':(1296, 976)}
 #K=np.array([[1440.318444287085, 0.0, 676.9511026584912], 
 #           [0.0, 1456.4727144606293, 540.711667283094], [0.0, 0.0, 1.0]])
 #D=np.array([[-0.8909302058344544], [3.1817023042732813], 
@@ -24,7 +24,7 @@ class Optical_flow():
     def __init__(self, dim):
         self.speed_left_buffer = np.array([0, 0, 0, 0], dtype=float)
         self.speed_right_buffer = np.array([0, 0, 0, 0], dtype=float)
-        self.accmax = 0.03 * (dim[0]/324.0)
+        self.accmax = 0.06 * (dim[0]/324.0)
 
         if dim[0]>1000:
             self.angle_range = (42.0,24.0)
@@ -117,12 +117,12 @@ class Optical_flow():
         '''    
         mag = LA.norm(flow/left_filter, axis=2)
     
-        mag[mag < 2.0] = 0  # filter out those noisy flow
+        mag[mag < 5.0] = 0  # filter out those noisy flow
         mag[mag > 0.0] = 1.0
         count = np.sum(mag)
     
         #print count
-        weight = mag/(elapsed_time*count*80+1)
+        weight = mag/(elapsed_time*count*40+1)
         weight = weight.reshape(weight.shape[0], weight.shape[1], 1)  # reshape for broadcasting
         self.speed_left_buffer = np.roll(self.speed_left_buffer, 1)
         self.speed_left_buffer[0] = np.sum(flow * left_filter * weight)

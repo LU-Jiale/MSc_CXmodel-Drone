@@ -93,7 +93,7 @@ while True:
     except:
         print "Optical flow speed retrieval failed"
         break
-
+    '''
     # optical flow heading
     __, phi = optflow.cart2pol(flow[:,:,0], flow[:,:,1])
     phi = phi/np.pi*180.0
@@ -105,7 +105,7 @@ while True:
     _shift[0] = 0
     count_deg = count_deg - _shift
     optical_direction = np.array(count_deg).flatten()
-
+    '''
     # visulize computed speed 
     speed_left = np.roll(speed_left, -1)
     speed_left[-1] = sl 
@@ -120,7 +120,7 @@ while True:
     ax2.plot(x_axis, speed_right, 'b-')
     ax3.plot(x_axis, speed_left, 'r-')
     ax3.plot(x_axis, speed_right, 'b-')
-    ax4.bar(index, optical_direction, color='r', label='degree')
+    #ax4.bar(index, optical_direction, color='r', label='degree')
     plt.draw()
 
     # updare cx_neurons

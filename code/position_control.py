@@ -38,20 +38,23 @@ cpu4_gps = np.zeros(16)
 
 # initialize camera and optical flow
 frame_num = 0
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
-cap.set(cv2.CAP_PROP_FPS, 30)
-fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+camera = picamera.PiCamera()
+stream = picamera.array.PiRGBArray(camera)
+camera.resolution = (fw, fh)
+
+fw = resolution[0]
+fh = resolution[1]
 print("Frame size: {}*{}".format(fw, fh))
 
 # intialise optical flow object
 optflow = Optical_flow(resolution);
-ret, frame1 = cap.read()
+camera.capture(stream, 'bgr', use_video_port=True)
+frame1 = stream.array
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
+stream.seek(0)
+stream.truncate()
 print("Undistorted frame size: {0}*{1}".format(fw,fh))
 left_filter, right_filter = optflow.get_filter(fh, fw)
 
@@ -82,9 +85,10 @@ while drone.mode.name != "POSHOLD":
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "POSHOLD":
+while drone.mode.name == "ALTHOLD":
     # Image processing, compute optical flow
-    ret, frame2 = cap.read()
+    camera.capture(stream, 'bgr', use_video_port=True)
+    frame2 = stream.array
     frame_num += 1
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = optflow.undistort(frame_gray)
@@ -126,7 +130,10 @@ while drone.mode.name == "POSHOLD":
                  (angle_gps/np.pi)*180.0, distance_gps, elapsed_time))
 
     prvs = next
-    print('Elapsed time:%.5f'%elapsed_time)
+    # reset the stream before the next capture
+    stream.seek(0)
+    stream.truncate()
+    #print('Elapsed time:%.5f'%elapsed_time)
 
 print "Mission ended or stoppped. The final results of CX model based on optcial flow is:"
 print((angle_optical/np.pi) * 180, distance_optical)
