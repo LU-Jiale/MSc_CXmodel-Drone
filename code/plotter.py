@@ -82,8 +82,8 @@ for i in range(len(navigation_info)):
 
     sl=navigation_info[i].split(' ')[0].split(':')[-1]
     sr=navigation_info[i].split(' ')[1].split(':')[-1]
-    speed_left.append(float(sl)) #\*alt*alt/25)
-    speed_right.append(float(sr)) #*alt*alt/25)
+    speed_left.append(float(sl))#*alt*alt/25)
+    speed_right.append(float(sr))#*alt*alt/25)
 
     heading = float(navigation_info[i].split(' ')[2].split(':')[-1])
     heading_list.append(heading)
@@ -126,16 +126,17 @@ print("Data number:", len(heading_list))
 x_axis = np.linspace(0, len(navigation_info), num=len(navigation_info), endpoint=False)
 
 # speed reterival
-fig1, (ax1, ax2, ax3) = plt.subplots(3, sharey=False)
+fig1, (ax1, ax2, ax3, ax10) = plt.subplots(4, sharey=False)
 ax1.set(title='Speed and altitude', ylabel='left')
 ax2.set(ylabel='right')
-ax3.set(xlabel='time (s)', ylabel='Altitude')
-
+ax3.set(ylabel='Altitude')
+ax10.set(xlabel='time (s)', ylabel='elapsed_time')
 ax1.plot(x_axis, speed_left, 'r-', label='optical_based')
 ax1.plot(x_axis, speed_left_real, 'b-', label='gps_based')
 ax2.plot(x_axis, speed_right, 'r-')
 ax2.plot(x_axis, speed_right_real, 'b-')
 ax3.plot(x_axis, alt_list, 'g-')
+ax10.plot(x_axis, time_list, 'g-')
 fig1.legend(ncol=3)
 fig1.subplots_adjust(hspace=0.3)
 # left-right speed compare
