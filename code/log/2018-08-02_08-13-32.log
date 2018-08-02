@@ -1111,5 +1111,3 @@ INFO:root:sl:0.0817848479313 sr:0.145344325723 heading:123 velocity:[-1.19, 1.62
 INFO:root:Angle_optical:128.492424935 Distance_optical:115.325608346 Angle_gps:133.865903987 Distance_gps:155.859732699                  elapsed_time:0.0885369777679
 INFO:root:sl:0.0591229693897 sr:0.117921077449 heading:92 velocity:[-0.33, 2.11, 0.04] position:LocationGlobalRelative:lat=55.9414237,lon=-3.1975622,alt=4.01
 INFO:root:Angle_optical:128.54488942 Distance_optical:115.189544163 Angle_gps:134.075119966 Distance_gps:155.468452463                  elapsed_time:1.8455760479
-INFO:root:sl:0.0891229693897 sr:0.147921077449 heading:90 velocity:[-0.33, 2.11, 0.04] position:LocationGlobalRelative:lat=55.9414237,lon=-3.1975622,alt=4.01
-INFO:root:Angle_optical:128.606881273 Di

@@ -9,13 +9,15 @@ from dronekit import VehicleMode
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 
 resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
 parser.add_argument('--recording', default = 'no', 
-                    help='Recoding option, true or false(default: false)')
+                    help='Recoding opget_angles_degreetion, true or false(default: false)')
 
 args = parser.parse_args()
 RECORDING = args.recording
@@ -38,17 +40,20 @@ cpu4_gps = np.zeros(16)
 
 # initialize camera and optical flow
 frame_num = 0
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
-cap.set(cv2.CAP_PROP_FPS, 30)
-fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+camera = PiCamera()
+camera.resolution = resolution
+camera.framerate = 32
+rawCapture = PiRGBArray(camera, size=resolution)
+fw,fh = camera.resolution
+# allow the camera to warmup
+time.sleep(0.1)
 print("Frame size: {}*{}".format(fw, fh))
 
 # intialise optical flow object
-optflow = Optical_flow(resolution);
-ret, frame1 = cap.read()
+optflow = Optical_flow(resolution)
+camera.capture(rawCapture, format="bgr")
+frame1 = rawCapture.array
+rawCapture.truncate(0)    # clear the stream in preparation for the next frame
 temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
 prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
@@ -60,9 +65,6 @@ if RECORDING == 'true':
     fname = 'video/' + time_string + '.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh), False)
-if not cap.isOpened():
-    logging.info('Camera not connected!')
-    raise Exception('Camera not connected!')
 
 # connect to PX4 and arm
 try:
@@ -83,8 +85,11 @@ while drone.mode.name != "ALT_HOLD":
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
 while drone.mode.name == "ALT_HOLD":
+for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    # grab the raw NumPy array representing the image
+    frame2 = frame.array
+    rawCapture.truncate(0)
     # Image processing, compute optical flow
-    ret, frame2 = cap.read()
     frame_num += 1
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = optflow.undistort(frame_gray)
@@ -133,5 +138,5 @@ print((angle_optical/np.pi) * 180, distance_optical)
 drone.close()
 if RECORDING == 'true':
     out.release()
-cap.release()
+camera.close()
 cv2.destroyAllWindows()
