@@ -10,11 +10,11 @@ from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.central_complex import update_cells
 from CX_model.drone_ardupilot import arm, arm_and_takeoff, condition_yaw, send_ned_velocity
 
-#connection_string = "127.0.0.1:14550"
 connection_string = '/dev/ttyAMA0'
 
 resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
+
 # command line arguments halder
 parser = argparse.ArgumentParser(description='CX model navigation.')
 parser.add_argument('--recording', default = 'no', 
@@ -39,34 +39,6 @@ tb1_gps = np.zeros(central_complex.N_TB1)
 memory_gps = 0.5 * np.ones(central_complex.N_CPU4)
 cpu4_gps = np.zeros(16)
 
-# initialize camera and optical flow
-frame_num = 0
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
-cap.set(cv2.CAP_PROP_FPS, 30)
-fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-print("Frame size: {}*{}".format(fw, fh))
-
-# intialise optical flow object
-optflow = Optical_flow(resolution);
-ret, frame1 = cap.read()
-temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
-prvs = optflow.undistort(temp)
-(fh, fw) = prvs.shape
-print("Undistorted frame size: {0}*{1}".format(fw,fh))
-left_filter, right_filter = optflow.get_filter(fh, fw)
-
-# Define the codec and create VideoWriter object
-if RECORDING == 'true':
-    fname = 'video/' + time_string + '.avi'
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh), False)
-if not cap.isOpened():
-    logging.info('Camera not connected!')
-    raise Exception('Camera not connected!')
-
 # connect to PX4 and arm
 try:
     drone = dronekit.connect(connection_string, baud = 921600, heartbeat_timeout=15)
@@ -76,7 +48,18 @@ except dronekit.APIException:
 except:
     logging.critical('Some other error!')
     raise Exception('Fail to connct PX4')
-state = arm_and_takeoff(drone, 5)
+state = arm_and_takeoff(drone, 3)
+
+# initialize camera and optical flow
+frame_num = 0
+camera = PiCamera()
+camera.resolution = resolution
+camera.framerate = 60
+rawCapture = PiRGBArray(camera, size=resolution)
+fw,fh = camera.resolution
+# allow the camera to warmup
+time.sleep(0.1)
+print("Frame size: {}*{}".format(fw, fh))
 
 # set to mission mode.
 drone.mode = VehicleMode("AUTO")
@@ -90,21 +73,47 @@ while nextwaypoint <= 1:
     nextwaypoint = drone.commands.next
     time.sleep(1)
 
-# -------------------------start mission--------------------------------
-# -----------------end when mode switched ------------------------------
-#-----------------------------------------------------------------------
+# intialise optical flow object
+optflow = Optical_flow(resolution)
+camera.capture(rawCapture, format="bgr")
+frame1 = rawCapture.array
+rawCapture.truncate(0)    # clear the stream in preparation for the next frame
 start_time = time.time()
+temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+prvs = optflow.undistort(temp)
+(fh, fw) = prvs.shape
+print("Undistorted frame size: {0}*{1}".format(fw,fh))
+left_filter, right_filter = optflow.get_filter(fh, fw)
+
+# Define the codec and create VideoWriter object
+if RECORDING == 'true':
+    fname = 'video/' + time_string + '.avi'
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(fname,fourcc, 20.0, (fw,fh), False)
+
+
+
+# -------------------------start mission--------------------------------
+# -----------------stop when mode is switched --------------------------
+#-----------------------------------------------------------------------
+
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "AUTO":
-    # Image processing, compute optical flow
-    ret, frame2 = cap.read()
+for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+
+    
+    # grab the raw NumPy array representing the image, break when mode is changed
+    frame2 = frame.array 
+    rawCapture.truncate(0)
     frame_num += 1
+    if drone.mode.name != "AUTO":
+        break
+    elapsed_time = time.time() - start_time
+    start_time = time.time()
+
+    # Image processing, compute optical flow 
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = optflow.undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
-    # speed
-    elapsed_time = time.time() - start_time
-    start_time = time.time()
     sl, sr = optflow.get_speed(flow, left_filter, right_filter, elapsed_time)
 
     # update CX neurons
@@ -125,7 +134,7 @@ while drone.mode.name == "AUTO":
                 update_cells(heading=drone_heading, velocity=velocity_gps, \
                              tb1=tb1_gps, memory=memory_gps, cx=cx_gps)
 
-    # write the frame for later recheck
+    # store video for analysis
     if RECORDING == 'true':
         out.write(next)
 
@@ -155,7 +164,7 @@ time.sleep(1)
 while drone.mode.name != "GUIDED":
     print "Waiting for the GUIDED mode."
     time.sleep(2)
-state = arm_and_takeoff(drone, 5)
+state = arm_and_takeoff(drone, 3)
 # -------------------------------------homing-----------------------------------------------
 # ------------------stop when the same period of time reached-------------------------------
 #-------------------------------------------------------------------------------------------
@@ -178,16 +187,20 @@ while drone.mode.name == "GUIDED":
     time.sleep(0.5)
 
 start_time = time.time()
-while drone.mode.name == "GUIDED":
-    # Image processing, compute optical flow
-    ret, frame2 = cap.read()
+for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+
+    frame2 = frame.array    # grab the raw NumPy array representing the image
+    rawCapture.truncate(0)   
+    elapsed_time = time.time() - start_time
+    start_time = time.time()
     frame_num += 1
+    if drone.mode.name != "GUIDED":
+        break
+
+    # Image processing, compute optical flow
     frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
     next = optflow.undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
-    # speed
-    elapsed_time = time.time() - start_time
-    start_time = time.time()
     sl, sr = optflow.get_speed(flow, left_filter, right_filter, elapsed_time)
 
     # update CX neurons
@@ -220,7 +233,7 @@ while drone.mode.name == "GUIDED":
        send_ned_velocity(drone, 2*np.cos(drone_heading), 2*np.sin(drone_heading), 0, 1)
 
 
-    # write the frame for later recheck
+    # store video for analysis
     if RECORDING == 'true':
         out.write(next)
 
@@ -247,5 +260,5 @@ print((angle_optical/np.pi) * 180, distance_optical)
 drone.close()
 if RECORDING == 'true':
     out.release()
-cap.release()
+camera.cloae()
 cv2.destroyAllWindows()

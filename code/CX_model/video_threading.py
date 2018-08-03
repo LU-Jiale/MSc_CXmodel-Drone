@@ -1,0 +1,87 @@
+import threading
+import time
+import cv2
+import numpy as np
+
+class videoThread (threading.Thread):
+   
+   def __init__(self, threadID, name, resolution, fps):
+      threading.Thread.__init__(self)
+      self.threadID = threadID
+      self.name = name
+      self.cap = cv2.VideoCapture(0)
+      self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
+      self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
+      self.cap.set(cv2.CAP_PROP_FPS, fps)
+      ret, frame = self.cap.read()
+      self.frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+      self.stop_flag = 0
+
+   def get_frame(self):
+      return self.frame
+
+   def stop(self):
+      self.stop_flag = 1
+
+   def run(self):
+      while not self.stop_flag:
+          ret, frame = self.cap.read()
+          if ret:
+              self.frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+          else:
+              break
+      self.cap.release()
+
+
+class picameraThread(threading.Thread):
+   
+   def __init__(self, threadID, name, resolution):
+      threading.Thread.__init__(self)
+      self.threadID = threadID
+      self.name = name
+      self.camera = PiCamera()
+      self.camera.resolution = resolution
+      self.camera.framerate = 60
+      self.rawCapture = PiRGBArray(self.camera, size=resolution)
+      
+      self.camera.capture(self.rawCapture, format="bgr")
+      frame_temp = self.rawCapture.array
+      self.rawCapture.truncate(0)    # clear the stream in preparation for the next frame
+      self.frame = cv2.cvtColor(frame_temp, cv2.COLOR_BGR2GRAY)
+      self.stop_flag = 0
+
+   def get_frame(self):
+      return self.frame
+
+   def stop(self):
+      self.stop_flag = 1
+
+   def run(self):
+      for image in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
+          if self.stop_flag:
+              break
+          frame_temp = image.array
+          self.frame = cv2.cvtColor(frame_temp,cv2.COLOR_BGR2GRAY)
+          self.rawCapture.truncate(0)
+
+      self.camera.cloae()
+   
+
+# Create new threads
+
+thread2 = guiThread(2, "GUI")
+
+
+# Start new Threads
+thread1.start()
+thread2.start()
+'''
+while True:
+         img = thread1.get_frame()
+         cv2.imshow('frame2', img)
+         ch = 0xFF & cv2.waitKey(5)
+         if ch == ord('q'):
+            thread1.stop()
+            break
+         time.sleep(0.01)
+'''

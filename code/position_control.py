@@ -42,7 +42,7 @@ cpu4_gps = np.zeros(16)
 frame_num = 0
 camera = PiCamera()
 camera.resolution = resolution
-camera.framerate = 32
+camera.framerate = 60
 rawCapture = PiRGBArray(camera, size=resolution)
 fw,fh = camera.resolution
 # allow the camera to warmup
@@ -84,8 +84,9 @@ while drone.mode.name != "ALT_HOLD":
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-while drone.mode.name == "ALT_HOLD":
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    if drone.mode.name != "ALT_HOLD":
+        break
     # grab the raw NumPy array representing the image
     frame2 = frame.array
     rawCapture.truncate(0)
