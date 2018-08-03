@@ -129,5 +129,5 @@ print((angle_optical/np.pi) * 180, distance_optical)
 drone.close()
 if RECORDING == 'true':
     out.release()
-camera.close()
+picam.stop()
 cv2.destroyAllWindows()
