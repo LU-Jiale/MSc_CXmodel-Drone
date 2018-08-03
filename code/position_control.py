@@ -11,6 +11,7 @@ from CX_model.central_complex import update_cells
 from CX_model.drone_basic import arm, arm_and_takeoff
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+from CX_model.video_threading import picameraThread
 
 resolution = FRAME_DIM['medium']
 print "Resolution: ", resolution
@@ -40,21 +41,16 @@ cpu4_gps = np.zeros(16)
 
 # initialize camera and optical flow
 frame_num = 0
-camera = PiCamera()
-camera.resolution = resolution
-camera.framerate = 60
-rawCapture = PiRGBArray(camera, size=resolution)
-fw,fh = camera.resolution
+picam = picameraThread(1, "picamera_video", resolution, 30)
+picam.start()
+fw,fh = resolution
 # allow the camera to warmup
 time.sleep(0.1)
 print("Frame size: {}*{}".format(fw, fh))
 
 # intialise optical flow object
 optflow = Optical_flow(resolution)
-camera.capture(rawCapture, format="bgr")
-frame1 = rawCapture.array
-rawCapture.truncate(0)    # clear the stream in preparation for the next frame
-temp = cv2.cvtColor(frame1,cv2.COLOR_BGR2GRAY)
+temp = picam.get_frame()
 prvs = optflow.undistort(temp)
 (fh, fw) = prvs.shape
 print("Undistorted frame size: {0}*{1}".format(fw,fh))
@@ -84,15 +80,9 @@ while drone.mode.name != "ALT_HOLD":
 
 start_time = time.time()
 print "Start to update CX model, switch mode to end"
-for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    if drone.mode.name != "ALT_HOLD":
-        break
-    # grab the raw NumPy array representing the image
-    frame2 = frame.array
-    rawCapture.truncate(0)
-    # Image processing, compute optical flow
-    frame_num += 1
-    frame_gray = cv2.cvtColor(frame2,cv2.COLOR_BGR2GRAY)
+while drone.mode.name == "ALT_HOLD":
+    
+    frame_gray = picam.get_frame()
     next = optflow.undistort(frame_gray)
     flow = cv2.calcOpticalFlowFarneback(prvs,next, None, 0.5, 3, 15, 3, 5, 1.1, 0)
     # speed
