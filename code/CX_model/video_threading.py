@@ -2,16 +2,18 @@ import threading
 import time
 import cv2
 import numpy as np
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 
 class videoThread (threading.Thread):
    
-   def __init__(self, threadID, name, resolution, fps):
+   def __init__(self, threadID, name, fw, fh, fps):
       threading.Thread.__init__(self)
       self.threadID = threadID
       self.name = name
       self.cap = cv2.VideoCapture(0)
-      self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,resolution[0])
-      self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT,resolution[1])
+      self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
+      self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
       self.cap.set(cv2.CAP_PROP_FPS, fps)
       ret, frame = self.cap.read()
       self.frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -35,13 +37,13 @@ class videoThread (threading.Thread):
 
 class picameraThread(threading.Thread):
    
-   def __init__(self, threadID, name, resolution):
+   def __init__(self, threadID, name, resolution, fps):
       threading.Thread.__init__(self)
       self.threadID = threadID
       self.name = name
       self.camera = PiCamera()
       self.camera.resolution = resolution
-      self.camera.framerate = 60
+      self.camera.framerate = fps
       self.rawCapture = PiRGBArray(self.camera, size=resolution)
       
       self.camera.capture(self.rawCapture, format="bgr")
@@ -64,17 +66,8 @@ class picameraThread(threading.Thread):
           self.frame = cv2.cvtColor(frame_temp,cv2.COLOR_BGR2GRAY)
           self.rawCapture.truncate(0)
 
-      self.camera.cloae()
-   
+      self.camera.close()
 
-# Create new threads
-
-thread2 = guiThread(2, "GUI")
-
-
-# Start new Threads
-thread1.start()
-thread2.start()
 '''
 while True:
          img = thread1.get_frame()

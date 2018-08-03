@@ -2,7 +2,7 @@
 import sys
 import numpy as np
 import cv2
-import os
+import os, time
 from CX_model.optical_flow import Optical_flow, FRAME_DIM
 from CX_model.video_threading import picameraThread
 
@@ -25,10 +25,10 @@ picam.start()
 optflow = Optical_flow(resolution);
 picture_num = 100
 column_num = 0
-
+time.sleep(2)
 while True:
 
-    gray = picameraThread.get_frame()
+    gray = picam.get_frame()
     # undistorte image
     gray = optflow.undistort(gray)
 
@@ -53,7 +53,6 @@ while True:
     elif ch == ord('-'):
         column_num = (column_num - 1) % fw
         print('Now the column is: {}'.format(column_num))
-
 
 # Release everything if job is finished
 picam.stop()
